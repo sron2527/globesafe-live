@@ -349,7 +349,21 @@ $('#installBtn').onclick=async()=>{if(!deferredInstallPrompt)return;deferredInst
 window.addEventListener('appinstalled',()=>{$('#installBtn').hidden=true;});
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-$('#refreshEvents').onclick=()=>{loadEvents();loadConflict();};
-renderCameras();renderPreferenceCounts();renderNotificationState();applyLanguage(currentLang);initHeroGlobe();loadEvents();loadConflict();setInterval(loadEvents,5*60*1000);setInterval(loadConflict,15*60*1000);
+$('#refreshEvents').onclick=()=>{loadEvents().catch(console.error);loadConflict().catch(console.error);};
 
-setInterval(()=>{if($('#view-cameras')?.classList.contains('active'))selectCamera(selectedCameraIndex);},60000);
+function safeInit(label,fn){try{fn();}catch(err){console.error('GlobeSafe '+label+' init failed:',err);}}
+safeInit('cameras',renderCameras);
+safeInit('preferences',renderPreferenceCounts);
+safeInit('notifications',renderNotificationState);
+safeInit('language',()=>applyLanguage(currentLang));
+safeInit('globe',initHeroGlobe);
+
+loadEvents().catch(err=>{
+  console.error('GlobeSafe live events failed:',err);
+  const el=$('#homeEventList');if(el)el.innerHTML='<div class="empty-state">Live data is temporarily unavailable. Please refresh in a moment.</div>';
+});
+loadConflict().catch(err=>console.error('GlobeSafe conflict feed failed:',err));
+
+setInterval(()=>loadEvents().catch(console.error),5*60*1000);
+setInterval(()=>loadConflict().catch(console.error),15*60*1000);
+setInterval(()=>{try{if($('#view-cameras')?.classList.contains('active'))selectCamera(selectedCameraIndex);}catch(err){console.error(err);}},60000);
