@@ -255,27 +255,44 @@ function filteredCameras(){
   return PUBLIC_CAMERAS.filter(c=>(country==='all'||c.country===country)&&(type==='all'||c.type===type));
 }
 function selectCameraById(id){
-  const c=PUBLIC_CAMERAS.find(x=>x.id===id);if(!c)return;selectedCameraId=id;
-  const img=$('#cameraFeatureImage'),directory=$('#cameraFeatureDirectory'),title=$('#cameraFeatureTitle'),meta=$('#cameraFeatureMeta'),link=$('#cameraFeatureLink'),badge=$('#cameraFeatureBadge');
+  const c=PUBLIC_CAMERAS.find(x=>x.id===id&&x.image);if(!c)return;
+  selectedCameraId=id;
+  const pane=$('#cameraFeaturePane'),img=$('#cameraFeatureImage'),directory=$('#cameraFeatureDirectory'),title=$('#cameraFeatureTitle'),meta=$('#cameraFeatureMeta'),link=$('#cameraFeatureLink'),badge=$('#cameraFeatureBadge');
+  if(pane)pane.hidden=false;
+  if(directory)directory.hidden=true;
+  if(img){img.hidden=false;img.src=cameraImageWithBust(c.image);img.alt=c.name;img.onerror=()=>{img.alt=t('cameraUnavailable');};}
   if(title)title.textContent=c.name;
   if(meta)meta.textContent=`${c.source} · ${c.region}`;
-  if(link){link.href=c.url;link.textContent=(c.image?t('openOfficialCamera'):t('openCameraDirectory'))+' →';}
-  if(c.image){
-    if(img){img.hidden=false;img.src=cameraImageWithBust(c.image);img.onerror=()=>{img.alt=t('cameraUnavailable');};}
-    if(directory)directory.hidden=true;
-    if(badge){badge.textContent='● '+t('liveSnapshot');badge.classList.remove('directory');}
-  }else{
-    if(img){img.hidden=true;img.removeAttribute('src');}
-    if(directory){directory.hidden=false;const h=$('#cameraDirectoryTitle');const p=$('#cameraDirectoryDesc');if(h)h.textContent=c.name;if(p)p.textContent=c.desc;}
-    if(badge){badge.textContent='◉ '+t('officialCameraNetwork');badge.classList.add('directory');}
-  }
+  if(link){link.href=c.url;link.textContent=t('openOfficialCamera')+' →';}
+  if(badge){badge.textContent='● '+t('liveSnapshot');badge.classList.remove('directory');}
   $$('#cameraList .camera-card').forEach(el=>el.classList.toggle('active',el.dataset.cameraId===id));
 }
 function renderCameras(){
-  const list=$('#cameraList');if(!list)return;
-  const cams=filteredCameras();
-  if(!cams.some(c=>c.id===selectedCameraId))selectedCameraId=cams[0]?.id||'';
-  list.innerHTML=cams.length?cams.map(c=>`<div class="camera-card selectable ${c.id===selectedCameraId?'active':''}" data-camera-id="${escapeHtml(c.id)}">${c.image?`<img class="camera-thumb" src="${escapeHtml(cameraImageWithBust(c.image))}" alt="">`:`<div class="camera-directory-thumb"><span>◉</span><small>${escapeHtml(c.source)}</small></div>`}<div class="camera-card-topline"><small>${escapeHtml(c.countryName)} · ${escapeHtml(c.type)}</small></div><strong>${escapeHtml(c.name)}</strong><p>${escapeHtml(c.desc)}</p><a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${c.image?t('openOfficialCamera'):t('openCameraDirectory')} →</a></div>`).join(''):`<div class="empty-state">${t('noCameraSources')}</div>`;
+  const list=$('#cameraList'),layout=$('.camera-layout'),pane=$('#cameraFeaturePane');if(!list)return;
+  const cams=filteredCameras(),liveCams=cams.filter(c=>c.image),directories=cams.filter(c=>!c.image);
+  if(!liveCams.some(c=>c.id===selectedCameraId))selectedCameraId=liveCams[0]?.id||'';
+  if(layout)layout.classList.toggle('directory-only',liveCams.length===0);
+  if(pane)pane.hidden=liveCams.length===0;
+
+  const liveCards=liveCams.map(c=>`<article class="camera-card selectable live-camera-card ${c.id===selectedCameraId?'active':''}" data-camera-id="${escapeHtml(c.id)}">
+    <img class="camera-thumb" src="${escapeHtml(cameraImageWithBust(c.image))}" alt="${escapeHtml(c.name)}">
+    <div class="camera-card-topline"><small>● ${escapeHtml(c.countryName)} · ${escapeHtml(c.type)}</small></div>
+    <strong>${escapeHtml(c.name)}</strong>
+    <p>${escapeHtml(c.desc)}</p>
+    <a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${t('openOfficialCamera')} →</a>
+  </article>`).join('');
+
+  const directoryCards=directories.map(c=>`<article class="camera-card directory-source-card">
+    <div class="directory-source-head">
+      <div class="directory-source-icon">◉</div>
+      <div><small>${escapeHtml(c.countryName)} · ${escapeHtml(c.type)}</small><strong>${escapeHtml(c.name)}</strong></div>
+    </div>
+    <p>${escapeHtml(c.desc)}</p>
+    <div class="directory-source-meta"><span>${escapeHtml(c.source)}</span><span>${t('officialCameraNetwork')}</span></div>
+    <a class="directory-open-btn" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${t('openCameraDirectory')} →</a>
+  </article>`).join('');
+
+  list.innerHTML=(liveCards+directoryCards)||`<div class="empty-state">${t('noCameraSources')}</div>`;
   $$('[data-camera-id]',list).forEach(el=>{el.onclick=e=>{if(e.target.closest('a'))return;selectCameraById(el.dataset.cameraId);};});
   if(selectedCameraId)selectCameraById(selectedCameraId);
 }
