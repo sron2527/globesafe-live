@@ -830,3 +830,168 @@
 
 /* V4.3 — conflict legend */
 .conflict-media-dot{background:#ffd167}
+
+/* V4.5 — Breaking News / World News */
+.breaking-kicker{display:flex;align-items:center;gap:7px;color:#ff8b9a}
+.breaking-dot{
+  width:7px;height:7px;border-radius:50%;background:#ff4f67;
+  box-shadow:0 0 0 5px rgba(255,79,103,.08),0 0 14px rgba(255,79,103,.55);
+  animation:breakingPulse 1.8s ease-in-out infinite;
+}
+@keyframes breakingPulse{50%{opacity:.45;transform:scale(.82)}}
+
+.breaking-news-section{padding-top:44px;padding-bottom:44px}
+.home-news-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.news-card{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.018));
+  color:var(--text);
+  text-decoration:none;
+  transition:.18s ease;
+}
+.news-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(57,217,255,.25);
+  background:rgba(57,217,255,.035);
+}
+.news-card.compact{min-height:145px}
+.news-card strong{
+  font-size:13px;
+  line-height:1.45;
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.news-card small{margin-top:auto;color:var(--muted);font-size:9px}
+.news-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.news-source-badge{
+  display:inline-flex;
+  width:max-content;
+  max-width:70%;
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.4px;
+  color:#bfefff;
+  background:rgba(57,217,255,.07);
+  border:1px solid rgba(57,217,255,.13);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.breaking-badge{
+  flex:0 0 auto;
+  padding:4px 6px;
+  border-radius:999px;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.6px;
+  color:#ffabb6;
+  background:rgba(255,79,103,.08);
+  border:1px solid rgba(255,79,103,.17);
+}
+.news-source-note{
+  margin:12px 0 0;
+  color:#647b92;
+  font-size:9px;
+  line-height:1.5;
+}
+
+.news-filter-row{
+  max-width:1224px;
+  margin:0 auto 16px;
+  padding:0 28px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.news-filter{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+  color:var(--muted);
+  border-radius:999px;
+  padding:8px 11px;
+  font-size:10px;
+  font-weight:800;
+}
+.news-filter.active{
+  color:#d5f8ff;
+  background:rgba(57,217,255,.09);
+  border-color:rgba(57,217,255,.25);
+}
+.news-source-bar{
+  max-width:1224px;
+  margin:0 auto 18px;
+  padding:12px 28px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  color:#637b92;
+  font-size:9px;
+  white-space:nowrap;
+}
+.news-source-bar::-webkit-scrollbar{display:none}
+.news-source-bar b{color:#91a8bc;font-size:9px}
+
+.world-news-grid{
+  max-width:1224px;
+  margin:0 auto 28px;
+  padding:0 28px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.world-news-grid>.empty-state,
+.world-news-grid>.skeleton-grid{grid-column:1/-1}
+.news-disclaimer{margin-bottom:55px}
+
+@media(max-width:1000px){
+  .home-news-strip,.world-news-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .breaking-news-section{padding-top:34px;padding-bottom:34px}
+  .home-news-strip{
+    display:flex;
+    overflow-x:auto;
+    gap:9px;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+    margin-right:-14px;
+    padding-right:14px;
+  }
+  .home-news-strip::-webkit-scrollbar{display:none}
+  .home-news-strip .news-card{
+    flex:0 0 82%;
+    min-height:150px;
+    scroll-snap-align:start;
+  }
+  .news-filter-row{
+    padding:0 14px 13px;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .news-filter-row::-webkit-scrollbar{display:none}
+  .news-filter{flex:0 0 auto}
+  .news-source-bar{padding:10px 14px}
+  .world-news-grid{
+    padding:0 14px;
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+  .world-news-grid .news-card{padding:14px}
+}
