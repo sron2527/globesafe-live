@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=41" />
+  <link rel="stylesheet" href="./style.css?v=42" />
 </head>
 <body>
   <div class="app-shell">
@@ -99,7 +99,7 @@
 
         <div class="trust-strip">
           <span data-i18n="publicDataSources">Public data sources</span>
-          <b>USGS</b><b>NASA EONET</b><b>GDACS</b><b>NASA GIBS</b><b>GDELT</b><b>Radio Browser</b><b>OpenFreeMap / OSM</b>
+          <b>USGS</b><b>NASA EONET</b><b>GDACS</b><b>NASA GIBS</b><b>GDELT DOC + GEO</b><b>Radio Browser</b><b>OpenFreeMap / OSM</b>
         </div>
 
         <section class="section-block compact-top">
@@ -195,7 +195,7 @@
             <div class="map-event-list" id="mapEventList"></div>
           </aside>
         </div>
-        <div class="conflict-disclaimer" data-i18n-html="conflictDisclaimer"><b>War & Conflict:</b> the MVP displays recent media-reported conflict coverage separately. Do not use GlobeSafe Live as a substitute for official government, civil-defense, embassy, or humanitarian security instructions.</div>
+        <div class="conflict-disclaimer" data-i18n-html="conflictDisclaimer"><b>War & Conflict:</b> map points are media-reported locations from GDELT GEO, not verified strike or battlefield coordinates. Do not use GlobeSafe Live as a substitute for official government, civil-defense, embassy, or humanitarian security instructions.</div>
       </section>
 
       <section class="view" id="view-weather">
@@ -413,6 +413,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=41"></script>
+  <script src="./app.js?v=42"></script>
 </body>
 </html>
