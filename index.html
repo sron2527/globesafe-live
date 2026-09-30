@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=44" />
+  <link rel="stylesheet" href="./style.css?v=45" />
 </head>
 <body>
   <div class="app-shell">
@@ -31,6 +31,7 @@
         <button class="nav-btn active" data-view="home" data-i18n="overview">Overview</button>
         <button class="nav-btn" data-view="map" data-i18n="liveMap">Live Map</button>
         <button class="nav-btn" data-view="weather" data-i18n="weatherLive">Weather Live</button>
+        <button class="nav-btn" data-view="news" data-i18n="worldNews">World News</button>
         <button class="nav-btn" data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
         <button class="nav-btn" data-view="cameras" data-i18n="cameras">Cameras</button>
         <button class="nav-btn" data-view="tv" data-i18n="liveTV">Live TV</button>
@@ -57,6 +58,7 @@
       <button data-view="home" data-i18n="overview">Overview</button>
       <button data-view="map" data-i18n="liveMap">Live Map</button>
       <button data-view="weather" data-i18n="weatherLive">Weather Live</button>
+      <button data-view="news" data-i18n="worldNews">World News</button>
       <button data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
       <button data-view="cameras" data-i18n="cameras">Cameras</button>
       <button data-view="tv" data-i18n="liveTV">Live TV</button>
@@ -141,6 +143,18 @@
           <div class="daily-brief-grid" id="dailyBriefGrid"><div class="skeleton-grid"></div></div>
         </section>
 
+        <section class="section-block breaking-news-section">
+          <div class="section-head slim">
+            <div>
+              <p class="kicker breaking-kicker"><span class="breaking-dot"></span> <span data-i18n="breakingNews">BREAKING NEWS</span></p>
+              <h2 data-i18n="worldHeadlines">World headlines</h2>
+            </div>
+            <button class="text-btn" data-view="news"><span data-i18n="viewAllNews">View all news</span> →</button>
+          </div>
+          <div class="home-news-strip" id="homeBreakingNews"><div class="skeleton-list"></div></div>
+          <p class="news-source-note" data-i18n="newsSourceNote">Headlines are linked to their original publishers. News reports are separate from official emergency alerts.</p>
+        </section>
+
         <section class="ad-wrap" aria-label="Advertisement placeholder">
           <span data-i18n="advertisement">ADVERTISEMENT</span>
           <div class="ad-box" data-i18n="adsensePlaceholder">Google AdSense placement — add code after site approval</div>
@@ -172,6 +186,37 @@
             <div class="radio-disc">FM</div>
           </div>
         </section>
+      </section>
+
+      <section class="view" id="view-news">
+        <div class="page-head">
+          <div>
+            <p class="kicker breaking-kicker"><span class="breaking-dot"></span> <span data-i18n="worldNewsKicker">LIVE WORLD NEWS</span></p>
+            <h1 data-i18n="worldNewsTitle">Breaking news from major global sources</h1>
+            <p data-i18n="worldNewsDesc">Recent headlines from selected international publishers, aggregated through GDELT and linked directly to the original source.</p>
+          </div>
+          <button class="refresh-btn" id="refreshNews">↻ <span data-i18n="refresh">Refresh</span></button>
+        </div>
+
+        <div class="news-filter-row" id="newsFilters">
+          <button class="news-filter active" data-news-filter="all" data-i18n="all">All</button>
+          <button class="news-filter" data-news-filter="breaking" data-i18n="breaking">Breaking</button>
+          <button class="news-filter" data-news-filter="disaster" data-i18n="disaster">Disaster</button>
+          <button class="news-filter" data-news-filter="weather" data-i18n="weatherNews">Weather</button>
+          <button class="news-filter" data-news-filter="conflict" data-i18n="conflictNews">Conflict</button>
+          <button class="news-filter" data-news-filter="world" data-i18n="world">World</button>
+          <button class="news-filter" data-news-filter="economy" data-i18n="economy">Economy</button>
+          <button class="news-filter" data-news-filter="science" data-i18n="science">Science</button>
+        </div>
+
+        <div class="news-source-bar">
+          <span data-i18n="selectedSources">Selected sources</span>
+          <b>BBC</b><b>DW</b><b>FRANCE 24</b><b>Al Jazeera</b><b>CNA</b><b>ABC Australia</b><b>NHK WORLD</b>
+        </div>
+
+        <div class="world-news-grid" id="worldNewsGrid"><div class="skeleton-grid"></div></div>
+
+        <div class="info-banner news-disclaimer" data-i18n="newsDisclaimer">Headlines are third-party news reports surfaced through GDELT. GlobeSafe Live does not rewrite them as verified emergency alerts. Open the original publisher for context and updates.</div>
       </section>
 
       <section class="view" id="view-map">
@@ -413,6 +458,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=44"></script>
+  <script src="./app.js?v=45"></script>
 </body>
 </html>
