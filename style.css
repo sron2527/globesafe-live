@@ -56,3 +56,13 @@
 .weather-note{max-width:1224px;margin:0 auto 70px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025)}
 .weather-note strong{display:block;margin-bottom:5px}.weather-note p{color:var(--muted);line-height:1.6;margin:0 0 8px;font-size:12px}.weather-note a{color:var(--cyan);font-size:12px;text-decoration:none;font-weight:800}
 @media(max-width:760px){.weather-toolbar,.weather-embed-card{padding-left:18px;padding-right:18px}.weather-location-label{width:100%;margin-left:0}.weather-embed-card{height:580px}}
+
+/* V3.6 — larger 3D globe */
+@media(min-width:1200px){
+  .hero-wrap{min-height:680px}
+  .hero-content{max-width:650px}
+  .globe-visual{right:-1vw;width:min(52vw,780px);height:min(52vw,780px)}
+  .globe-visual #heroGlobe{inset:1%}
+  .orbit-a{width:760px;height:760px;right:-1vw}
+  .orbit-b{width:840px;height:455px;right:-4vw}
+}
