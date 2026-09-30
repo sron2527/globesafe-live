@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=36" />
+  <link rel="stylesheet" href="./style.css?v=37" />
 </head>
 <body>
   <div class="app-shell">
@@ -328,6 +328,14 @@
       </section>
     </main>
 
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+      <button data-view="home"><span class="mbn-icon">⌂</span><span data-i18n="overview">Overview</span></button>
+      <button data-view="map"><span class="mbn-icon">◎</span><span data-i18n="liveMap">Live Map</span></button>
+      <button data-view="weather"><span class="mbn-icon">☁</span><span data-i18n="weatherLive">Weather Live</span></button>
+      <button data-view="cameras"><span class="mbn-icon">◉</span><span data-i18n="cameras">Cameras</span></button>
+      <button data-view="radio"><span class="mbn-icon">♪</span><span data-i18n="worldFM">World FM</span></button>
+    </nav>
+
     <footer>
       <div><strong>GlobeSafe Live</strong><p data-i18n="globalAwareness">Global awareness for everyone.</p></div>
       <div class="footer-links"><button data-view="about" data-i18n="about">About</button><button data-view="about" data-i18n="dataSources">Data Sources</button><button data-view="about" data-i18n="privacy">Privacy</button><button data-view="about" data-i18n="disclaimer">Disclaimer</button></div>
@@ -336,6 +344,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=36"></script>
+  <script src="./app.js?v=37"></script>
 </body>
 </html>
