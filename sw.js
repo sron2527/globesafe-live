@@ -1,4 +1,4 @@
-const CACHE='globesafe-live-v3-6-shell';
+const CACHE='globesafe-live-v3-7-shell';
 const APP_SHELL=['./','./index.html','./style.css?v=35','./app.js?v=35','./manifest.webmanifest'];
 
 self.addEventListener('install',event=>{
