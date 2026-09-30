@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=45" />
+  <link rel="stylesheet" href="./style.css?v=46" />
 </head>
 <body>
   <div class="app-shell">
@@ -32,6 +32,7 @@
         <button class="nav-btn" data-view="map" data-i18n="liveMap">Live Map</button>
         <button class="nav-btn" data-view="weather" data-i18n="weatherLive">Weather Live</button>
         <button class="nav-btn" data-view="news" data-i18n="worldNews">World News</button>
+        <button class="nav-btn" data-view="community">Community</button>
         <button class="nav-btn" data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
         <button class="nav-btn" data-view="cameras" data-i18n="cameras">Cameras</button>
         <button class="nav-btn" data-view="tv" data-i18n="liveTV">Live TV</button>
@@ -59,6 +60,7 @@
       <button data-view="map" data-i18n="liveMap">Live Map</button>
       <button data-view="weather" data-i18n="weatherLive">Weather Live</button>
       <button data-view="news" data-i18n="worldNews">World News</button>
+      <button data-view="community">Community Live</button>
       <button data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
       <button data-view="cameras" data-i18n="cameras">Cameras</button>
       <button data-view="tv" data-i18n="liveTV">Live TV</button>
@@ -424,6 +426,65 @@
         <div class="station-grid" id="stationGrid"><div class="skeleton-grid"></div></div>
       </section>
 
+      <section class="view" id="view-community">
+        <div class="page-head community-page-head">
+          <div>
+            <p class="kicker community-kicker">● <span data-community-i18n="kicker">COMMUNITY LIVE</span></p>
+            <h1 data-community-i18n="title">Talk, share and help each other.</h1>
+            <p data-community-i18n="desc">Live community chat for sharing local situations and experiences. Posts are user-generated and are not verified emergency alerts.</p>
+          </div>
+          <div class="community-status" id="communityStatus"><span></span><b data-community-i18n="connecting">Connecting…</b></div>
+        </div>
+
+        <div class="community-shell">
+          <aside class="community-sidebar">
+            <div class="community-profile-card">
+              <small data-community-i18n="nickname">YOUR NICKNAME</small>
+              <div class="community-name-row">
+                <input id="communityName" maxlength="24" placeholder="Nickname" autocomplete="nickname" />
+                <button id="saveCommunityName" class="primary-btn small" data-community-i18n="save">Save</button>
+              </div>
+              <p data-community-i18n="nicknameNote">No public account is required. Firebase creates an anonymous session in your browser.</p>
+            </div>
+
+            <div class="community-room-list" id="communityRooms">
+              <button class="community-room active" data-room="global"><span>🌐</span><div><strong data-community-i18n="global">Global</strong><small data-community-i18n="globalDesc">Worldwide conversation</small></div></button>
+              <button class="community-room" data-room="thailand"><span>🇹🇭</span><div><strong>Thailand</strong><small data-community-i18n="thailandDesc">Talk about Thailand</small></div></button>
+              <button class="community-room" data-room="disaster"><span>⚠️</span><div><strong data-community-i18n="disaster">Disaster</strong><small data-community-i18n="disasterDesc">Hazards and local conditions</small></div></button>
+              <button class="community-room" data-room="weather"><span>🌧️</span><div><strong data-community-i18n="weather">Weather</strong><small data-community-i18n="weatherDesc">Rain, storms and weather</small></div></button>
+              <button class="community-room" data-room="local"><span>📍</span><div><strong data-community-i18n="localReports">Local Reports</strong><small data-community-i18n="localDesc">Share what you see locally</small></div></button>
+            </div>
+
+            <div class="community-safety-note">
+              <b data-community-i18n="safetyTitle">Community safety</b>
+              <p data-community-i18n="safetyText">Do not post private addresses, phone numbers, passwords or unverified evacuation instructions. Use official authorities for urgent safety decisions.</p>
+            </div>
+          </aside>
+
+          <section class="community-chat-card">
+            <div class="community-chat-head">
+              <div><span id="communityRoomIcon">🌐</span><div><strong id="communityRoomTitle">Global</strong><small id="communityRoomSubtitle">Worldwide conversation</small></div></div>
+              <span class="community-live-pill">● LIVE</span>
+            </div>
+
+            <div class="community-messages" id="communityMessages">
+              <div class="community-empty" data-community-i18n="loading">Loading community messages…</div>
+            </div>
+
+            <div class="community-compose">
+              <textarea id="communityMessage" maxlength="500" rows="2" placeholder="Share an update or story…"></textarea>
+              <div class="community-compose-bottom">
+                <span id="communityCharCount">0 / 500</span>
+                <span class="community-send-state" id="communitySendState"></span>
+                <button id="sendCommunityMessage" class="primary-btn"><span data-community-i18n="send">Send</span> ↑</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="info-banner community-disclaimer" data-community-i18n="disclaimer">Community messages are user-generated content. GlobeSafe Live does not verify posts as official warnings. Report harmful or misleading posts and follow official authorities for emergencies.</div>
+      </section>
+
       <section class="view" id="view-about">
         <div class="page-head"><div><p class="kicker" data-i18n="aboutGlobeSafe">ABOUT GLOBESAFE LIVE</p><h1 data-i18n="aboutTitle">Public information, clearly sourced.</h1><p data-i18n="aboutDesc">GlobeSafe Live is designed as a public-access situational awareness tool. No account is required.</p></div></div>
         <div class="policy-grid">
@@ -459,5 +520,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
   <script src="./app.js?v=45"></script>
+  <script type="module" src="./community.js?v=46"></script>
 </body>
 </html>
