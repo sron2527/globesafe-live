@@ -46,16 +46,48 @@ function normalizeEonet(f){
 function normalizeQuake(f){const p=f.properties||{},c=f.geometry?.coordinates||[];return{id:`usgs-${f.id}`,type:'earthquake',title:`M${p.mag??'?'} — ${p.place||'Earthquake'}`,time:new Date(p.time).toISOString(),lon:c[0],lat:c[1],depth:c[2],source:'USGS',sourceUrl:p.url,description:p.title||'',magnitude:p.mag??'—',alert:p.alert||'—'};}
 async function fetchJson(url,timeout=10000){const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),timeout);try{const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
 
+function fetchUsgsJsonp(timeout=12000){
+  return new Promise((resolve,reject)=>{
+    const old=window.eqfeed_callback;
+    const script=document.createElement('script');
+    let done=false;
+    const finish=(ok,value)=>{if(done)return;done=true;clearTimeout(timer);script.remove();if(old)window.eqfeed_callback=old;else try{delete window.eqfeed_callback}catch{};ok?resolve(value):reject(value);};
+    window.eqfeed_callback=data=>finish(true,data);
+    script.src='https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojsonp?ts='+Date.now();
+    script.async=true;script.onerror=()=>finish(false,new Error('USGS JSONP failed'));
+    const timer=setTimeout(()=>finish(false,new Error('USGS JSONP timeout')),timeout);
+    document.head.appendChild(script);
+  });
+}
 async function loadEvents(){
   $('#lastUpdated').textContent='Updating…';
-  const [q,e]=await Promise.allSettled([fetchJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson'),fetchJson('https://eonet.gsfc.nasa.gov/api/v3/events/geojson?status=open&days=30&limit=160')]);
-  const quakes=q.status==='fulfilled'?(q.value.features||[]).map(normalizeQuake):[];
-  const natural=e.status==='fulfilled'?(e.value.features||[]).map(normalizeEonet).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type)):[];
-  state.events=[...quakes,...natural].filter(x=>Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).sort((a,b)=>new Date(b.time)-new Date(a.time));
-  renderCounts();renderHomeEvents();renderWatchMatches();renderDailyBrief();updateHeroGlobeEvents();if(state.map){renderMap();renderWatchAreasOnMap();}
+  let quakes=[],natural=[],sourceBits=[];
+  const [q,e]=await Promise.allSettled([
+    fetchJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',12000),
+    fetchJson('https://eonet.gsfc.nasa.gov/api/v3/events/geojson?status=open&days=30&limit=160',12000)
+  ]);
+  if(q.status==='fulfilled'){quakes=(q.value.features||[]).map(normalizeQuake);sourceBits.push('USGS');}
+  else{
+    try{const jq=await fetchUsgsJsonp();quakes=(jq.features||[]).map(normalizeQuake);sourceBits.push('USGS JSONP');}catch{}
+  }
+  if(e.status==='fulfilled'){natural=(e.value.features||[]).map(normalizeEonet).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));sourceBits.push('NASA EONET');}
+  const incoming=[...quakes,...natural].filter(x=>Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  if(incoming.length){
+    state.events=incoming;
+    try{localStorage.setItem('globesafe.lastGoodEvents.v3',JSON.stringify({time:Date.now(),events:state.events.slice(0,700)}));}catch{}
+  }else{
+    try{const cached=JSON.parse(localStorage.getItem('globesafe.lastGoodEvents.v3')||'null');if(cached?.events?.length){state.events=cached.events;sourceBits.push('cached');}}catch{}
+  }
+  try{
+    renderCounts();renderHomeEvents();renderWatchMatches();renderDailyBrief();updateHeroGlobeEvents();
+    if(state.map){renderMap();renderWatchAreasOnMap();}
+  }catch(err){console.error('GlobeSafe render error',err);}
   if(state.hasLoadedEvents)checkTrackedAlerts();else initializeSeenEvents();
   state.hasLoadedEvents=true;
-  const time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});$('#lastUpdated').textContent=time;$('#mapUpdated').textContent=`Updated ${time}`;
+  const time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  $('#lastUpdated').textContent=state.events.length?time:'Feed unavailable';
+  $('#mapUpdated').textContent=state.events.length?`Updated ${time}`:'Live feeds unavailable';
+  document.body.dataset.liveSources=sourceBits.join(',');
 }
 function renderCounts(){const counts={earthquake:0,storm:0,flood:0,wildfire:0,volcano:0};state.events.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);Object.keys(counts).forEach(k=>{const el=$(`#count-${k}`);if(el)el.textContent=counts[k];});$('#statEvents').textContent=state.events.length;$('#statQuakes').textContent=counts.earthquake;$('#count-conflict').textContent=state.conflictReports.length||'LIVE';renderPreferenceCounts();}
 function eventRow(e){const m=typeMeta[e.type]||typeMeta.other;return`<button class="event-row" data-event-id="${escapeHtml(e.id)}"><span class="event-badge ${m.class}">${m.icon}</span><span class="event-main"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(m.label)} · ${ago(e.time)} · ${escapeHtml(e.source)}</small></span><span class="severity">${e.type==='earthquake'&&Number(e.magnitude)>=5?'SIGNIFICANT':'ACTIVE'}</span></button>`;}
@@ -69,7 +101,7 @@ function initMap(){
   }
   state.map=new maplibregl.Map({
     container:'map',
-    style:'https://tiles.openfreemap.org/styles/dark',
+    style:'https://tiles.openfreemap.org/styles/liberty',
     center:[15,18],zoom:1.55,minZoom:1,maxZoom:16,
     attributionControl:false,renderWorldCopies:true
   });
