@@ -156,8 +156,10 @@ function subscribeRoom(room){
     list.scrollTop=list.scrollHeight;
   },err=>{
     console.error('GlobeSafe community read:',err);
-    list.innerHTML='<div class="community-empty error">'+t('sendFailed')+'</div>';
-    setStatus(t('offline'),'error');
+    const code=String(err?.code||'database-error');
+    list.innerHTML='<div class="community-empty error">Firebase: '+code+'</div>';
+    setStatus('Firebase: '+code,'error');
+    setSendState('Firebase: '+code,'error');
   });
 }
 
@@ -172,7 +174,9 @@ async function ensureAuth(){
     return currentUser;
   }catch(err){
     console.error('GlobeSafe anonymous auth:',err);
-    setStatus(t('offline'),'error');
+    const code=String(err?.code||'auth-error');
+    setStatus('Firebase: '+code,'error');
+    setSendState('Firebase: '+code,'error');
     throw err;
   }
 }
@@ -225,7 +229,7 @@ async function sendMessage(){
     setTimeout(()=>setSendState(''),1800);
   }catch(err){
     console.error('GlobeSafe community write:',err);
-    setSendState(t('sendFailed'),'error');
+    setSendState('Firebase: '+String(err?.code||'write-error'),'error');
   }finally{
     const btn=$('#sendCommunityMessage');if(btn)btn.disabled=false;
   }
