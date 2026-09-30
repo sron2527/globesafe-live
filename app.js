@@ -2,7 +2,7 @@ const STORAGE = {
   areas:'globesafe.watchAreas.v2', countries:'globesafe.favoriteCountries.v2', stations:'globesafe.favoriteStations.v2', seen:'globesafe.seenEvents.v2', theme:'globesafe.theme.v2', lang:'globesafe.language.v3'
 };
 const state = {
-  events: [], conflictReports: [], map: null, mapReady:false, mapMarkers:[], watchMarkers:[], heroGlobe:null, heroGlobeReady:false, globePaused:false, currentFilter: 'all', selectedEvent: null, stations: [],
+  events: [], conflictReports: [], newsArticles: [], newsFilter:'all', map: null, mapReady:false, mapMarkers:[], watchMarkers:[], heroGlobe:null, heroGlobeReady:false, globePaused:false, currentFilter: 'all', selectedEvent: null, stations: [],
   watchAreas: loadLocal(STORAGE.areas, []), favoriteCountries: loadLocal(STORAGE.countries, []), favoriteStations: loadLocal(STORAGE.stations, []),
   favoritesOnly:false, hasLoadedEvents:false
 };
@@ -27,6 +27,7 @@ function showView(name){
   $('#mobileMenu').classList.remove('open'); window.scrollTo({top:0,behavior:'smooth'});
   if(name==='map')setTimeout(()=>{initMap();renderMap();renderWatchAreasOnMap();state.map?.resize();},80);
   if(name==='weather')setTimeout(()=>syncWeatherUI(),40);
+  if(name==='news'&&!state.newsArticles.length)loadWorldNews();
   if(name==='radio'&&!state.stations.length)loadRadio();
   if(name==='cameras')renderCameras();
   if(name==='tv')renderLiveTV();
@@ -244,6 +245,107 @@ function openEvent(id){const e=state.events.find(x=>x.id===id);if(!e)return;stat
 
 async function loadConflict(){const url='https://api.gdeltproject.org/api/v2/doc/doc?query=(%22armed%20conflict%22%20OR%20airstrike%20OR%20shelling%20OR%20%22missile%20attack%22)&mode=artlist&maxrecords=18&timespan=24h&sort=datedesc&format=json';try{const d=await fetchJson(url,12000);state.conflictReports=(d.articles||[]).slice(0,18).map(x=>({title:x.title||'Conflict report',url:x.url||'#',domain:x.domain||'',sourcecountry:x.sourcecountry||'',seen:x.seendate||''}));}catch{state.conflictReports=[];}renderConflict();renderCounts();if(state.map&&state.currentFilter==='conflict')renderMap();}
 function renderConflict(){const el=$('#conflictList'),list=state.conflictReports.slice(0,6);el.innerHTML=list.length?list.map(r=>`<div class="conflict-item"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a><small>${escapeHtml(r.domain||r.sourcecountry||'GDELT')} · media report</small></div>`).join(''):'<div class="empty-state">The media index could not be reached. No conflict claim is generated locally.</div>';}
+
+
+/* World News — headlines only, original publisher links */
+const NEWS_SOURCE_QUERIES=[
+  '(domain:bbc.com OR domain:dw.com OR domain:france24.com)',
+  '(domain:aljazeera.com OR domain:channelnewsasia.com OR domain:abc.net.au)',
+  '(domain:nhk.or.jp OR domain:sky.com)'
+];
+function parseGdeltTime(v){
+  const x=String(v||'');
+  const m=x.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})/);
+  if(!m)return new Date().toISOString();
+  return new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6])).toISOString();
+}
+function publisherName(domain){
+  const d=String(domain||'').replace(/^www\./,'').toLowerCase();
+  if(d.includes('bbc.'))return'BBC';
+  if(d.includes('dw.com'))return'DW';
+  if(d.includes('france24.com'))return'FRANCE 24';
+  if(d.includes('aljazeera.com'))return'Al Jazeera';
+  if(d.includes('channelnewsasia.com'))return'CNA';
+  if(d.includes('abc.net.au'))return'ABC Australia';
+  if(d.includes('nhk.or.jp'))return'NHK WORLD';
+  if(d.includes('sky.com'))return'Sky News';
+  return domain||'News source';
+}
+function classifyNews(title){
+  const x=String(title||'').toLowerCase();
+  if(/earthquake|quake|flood|wildfire|volcan|landslide|tsunami|disaster|evacuat|eruption/.test(x))return'disaster';
+  if(/weather|storm|typhoon|hurricane|cyclone|tornado|rain|heatwave|snow|frost/.test(x))return'weather';
+  if(/war|conflict|airstrike|missile|shelling|military|ceasefire|attack|drone strike/.test(x))return'conflict';
+  if(/econom|market|stock|trade|inflation|bank|oil|currency|business|tariff/.test(x))return'economy';
+  if(/science|space|nasa|research|climate|technology|tech|ai |artificial intelligence|health study/.test(x))return'science';
+  return'world';
+}
+function newsAgeMs(a){return Math.max(0,Date.now()-new Date(a.time).getTime());}
+function newsMatches(a,filter){
+  if(filter==='all')return true;
+  if(filter==='breaking')return newsAgeMs(a)<=6*60*60*1000;
+  return a.category===filter;
+}
+function normalizeNewsArticle(x){
+  return{
+    title:String(x.title||'').trim(),
+    url:x.url||'',
+    domain:x.domain||'',
+    publisher:publisherName(x.domain||''),
+    sourcecountry:x.sourcecountry||'',
+    language:x.language||'',
+    time:parseGdeltTime(x.seendate||x.seenDate||''),
+    category:classifyNews(x.title||'')
+  };
+}
+async function loadWorldNews(){
+  const home=$('#homeBreakingNews'),grid=$('#worldNewsGrid');
+  if(home&&!state.newsArticles.length)home.innerHTML='<div class="skeleton-list"></div>';
+  if(grid&&!state.newsArticles.length)grid.innerHTML='<div class="skeleton-grid"></div>';
+  const calls=NEWS_SOURCE_QUERIES.map(q=>{
+    const u='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent(q)+'&mode=artlist&maxrecords=35&timespan=12h&sort=datedesc&format=json';
+    return fetchJson(u,14000);
+  });
+  const settled=await Promise.allSettled(calls);
+  const merged=[];
+  settled.forEach(res=>{if(res.status==='fulfilled')(res.value.articles||[]).forEach(x=>merged.push(normalizeNewsArticle(x)));});
+  const seen=new Set();
+  state.newsArticles=merged
+    .filter(a=>a.title&&/^https?:\/\//i.test(a.url))
+    .filter(a=>{const k=a.url||a.title.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;})
+    .sort((a,b)=>new Date(b.time)-new Date(a.time))
+    .slice(0,80);
+  try{localStorage.setItem('globesafe.worldNews.v1',JSON.stringify({time:Date.now(),articles:state.newsArticles}));}catch{}
+  if(!state.newsArticles.length){
+    try{
+      const cached=JSON.parse(localStorage.getItem('globesafe.worldNews.v1')||'null');
+      if(cached?.articles?.length)state.newsArticles=cached.articles;
+    }catch{}
+  }
+  renderHomeNews();
+  renderWorldNews();
+}
+function newsCard(a,compact=false){
+  const isBreaking=newsAgeMs(a)<=2*60*60*1000;
+  return`<a class="news-card ${compact?'compact':''}" href="${escapeHtml(a.url)}" target="_blank" rel="noopener noreferrer">
+    <div class="news-card-top"><span class="news-source-badge">${escapeHtml(a.publisher)}</span>${isBreaking?'<span class="breaking-badge">BREAKING</span>':''}</div>
+    <strong>${escapeHtml(a.title)}</strong>
+    <small>${escapeHtml(a.sourcecountry||'International')} · ${ago(a.time)}</small>
+  </a>`;
+}
+function renderHomeNews(){
+  const el=$('#homeBreakingNews');if(!el)return;
+  const list=state.newsArticles.slice(0,6);
+  el.innerHTML=list.length?list.map(a=>newsCard(a,true)).join(''):`<div class="empty-state">${t('newsUnavailable')}</div>`;
+}
+function renderWorldNews(){
+  const grid=$('#worldNewsGrid');if(!grid)return;
+  const list=state.newsArticles.filter(a=>newsMatches(a,state.newsFilter));
+  grid.innerHTML=list.length?list.slice(0,60).map(a=>newsCard(a,false)).join(''):`<div class="empty-state">${t('noNewsFilter')}</div>`;
+  $$('#newsFilters .news-filter').forEach(b=>b.classList.toggle('active',b.dataset.newsFilter===state.newsFilter));
+}
+$$('#newsFilters .news-filter').forEach(btn=>btn.onclick=()=>{state.newsFilter=btn.dataset.newsFilter;renderWorldNews();});
+$('#refreshNews')?.addEventListener('click',()=>loadWorldNews().catch(err=>console.error('GlobeSafe news:',err)));
 
 const PUBLIC_CAMERAS=[
   {id:'us-v1',country:'US',countryName:'United States',type:'volcano',name:'USGS Kīlauea V1cam',region:'Hawaiʻi, USA',source:'USGS',desc:'West Halemaʻumaʻu crater — public USGS near-real-time snapshot.',image:'https://volcanoes.usgs.gov/observatories/hvo/cams/V1cam/images/M.jpg',url:'https://www.usgs.gov/volcanoes/kilauea/v1cam-kilauea-volcano-hawaii-west-halemaumau-crater'},
@@ -475,6 +577,12 @@ Object.assign(I18N.es,{liveTV:'TV en vivo',liveTVKicker:'TV OFICIAL EN VIVO',liv
 Object.assign(I18N.id,{liveTV:'TV Langsung',liveTVKicker:'TV RESMI LANGSUNG',liveTVTitle:'TV langsung dari seluruh dunia',allCountries:'Semua negara',allCameraTypes:'Semua jenis kamera',trafficCameras:'Lalu lintas',volcanoCameras:'Gunung api',weatherCameras:'Cuaca',liveSnapshot:'SNAPSHOT LANGSUNG',officialCameraNetwork:'JARINGAN KAMERA RESMI',allCategories:'Semua kategori',news:'Berita',publicTV:'TV publik',openOfficialTV:'Buka TV resmi',watchHere:'Tonton di sini',officialPage:'Halaman resmi'});
 Object.assign(I18N.pt,{liveTV:'TV ao vivo',liveTVKicker:'TV OFICIAL AO VIVO',liveTVTitle:'TV ao vivo do mundo inteiro',allCountries:'Todos os países',allCameraTypes:'Todos os tipos',trafficCameras:'Trânsito',volcanoCameras:'Vulcão',weatherCameras:'Clima',liveSnapshot:'IMAGEM AO VIVO',officialCameraNetwork:'REDE OFICIAL DE CÂMERAS',allCategories:'Todas as categorias',news:'Notícias',publicTV:'TV pública',openOfficialTV:'Abrir TV oficial',watchHere:'Assistir aqui',officialPage:'Página oficial'});
 
+Object.assign(I18N.en,{worldNews:'World News',breakingNews:'BREAKING NEWS',worldHeadlines:'World headlines',viewAllNews:'View all news',newsSourceNote:'Headlines are linked to their original publishers. News reports are separate from official emergency alerts.',worldNewsKicker:'LIVE WORLD NEWS',worldNewsTitle:'Breaking news from major global sources',worldNewsDesc:'Recent headlines from selected international publishers, aggregated through GDELT and linked directly to the original source.',breaking:'Breaking',disaster:'Disaster',weatherNews:'Weather',conflictNews:'Conflict',world:'World',economy:'Economy',science:'Science',selectedSources:'Selected sources',newsDisclaimer:'Headlines are third-party news reports surfaced through GDELT. GlobeSafe Live does not rewrite them as verified emergency alerts. Open the original publisher for context and updates.',newsUnavailable:'World news is temporarily unavailable.',noNewsFilter:'No recent headlines match this filter.'});
+Object.assign(I18N.th,{worldNews:'ข่าวทั่วโลก',breakingNews:'ข่าวด่วน',worldHeadlines:'พาดหัวข่าวทั่วโลก',viewAllNews:'ดูข่าวทั้งหมด',newsSourceNote:'พาดหัวข่าวเชื่อมไปยังสำนักข่าวต้นฉบับ ข่าวจากสื่อจะแยกจากคำเตือนฉุกเฉินทางการ',worldNewsKicker:'ข่าวทั่วโลกแบบสด',worldNewsTitle:'ข่าวด่วนจากสำนักข่าวหลักทั่วโลก',worldNewsDesc:'พาดหัวล่าสุดจากสำนักข่าวต่างประเทศที่คัดเลือก รวบรวมผ่าน GDELT และเชื่อมตรงไปยังแหล่งข่าวต้นฉบับ',breaking:'ข่าวด่วน',disaster:'ภัยพิบัติ',weatherNews:'สภาพอากาศ',conflictNews:'ความขัดแย้ง',world:'ทั่วโลก',economy:'เศรษฐกิจ',science:'วิทยาศาสตร์',selectedSources:'สำนักข่าวที่เลือก',newsDisclaimer:'พาดหัวเป็นรายงานจากสำนักข่าวภายนอกที่แสดงผ่าน GDELT โดย GlobeSafe Live ไม่ถือว่าข่าวเหล่านี้เป็นคำเตือนฉุกเฉินที่ยืนยันแล้ว กรุณาเปิดต้นฉบับเพื่อดูบริบทและข้อมูลล่าสุด',newsUnavailable:'ข่าวทั่วโลกไม่พร้อมใช้งานชั่วคราว',noNewsFilter:'ไม่พบพาดหัวล่าสุดในหมวดนี้'});
+Object.assign(I18N.es,{worldNews:'Noticias mundiales',breakingNews:'ÚLTIMA HORA',worldHeadlines:'Titulares mundiales',viewAllNews:'Ver todas',worldNewsKicker:'NOTICIAS MUNDIALES',worldNewsTitle:'Últimas noticias de fuentes globales',breaking:'Última hora',disaster:'Desastres',weatherNews:'Tiempo',conflictNews:'Conflicto',world:'Mundo',economy:'Economía',science:'Ciencia',selectedSources:'Fuentes seleccionadas',newsUnavailable:'Noticias no disponibles temporalmente.',noNewsFilter:'No hay titulares recientes en este filtro.'});
+Object.assign(I18N.id,{worldNews:'Berita Dunia',breakingNews:'BERITA TERKINI',worldHeadlines:'Judul berita dunia',viewAllNews:'Lihat semua',worldNewsKicker:'BERITA DUNIA LANGSUNG',worldNewsTitle:'Berita terbaru dari sumber global',breaking:'Terkini',disaster:'Bencana',weatherNews:'Cuaca',conflictNews:'Konflik',world:'Dunia',economy:'Ekonomi',science:'Sains',selectedSources:'Sumber pilihan',newsUnavailable:'Berita sementara tidak tersedia.',noNewsFilter:'Tidak ada berita terbaru untuk filter ini.'});
+Object.assign(I18N.pt,{worldNews:'Notícias mundiais',breakingNews:'ÚLTIMAS NOTÍCIAS',worldHeadlines:'Manchetes mundiais',viewAllNews:'Ver todas',worldNewsKicker:'NOTÍCIAS MUNDIAIS AO VIVO',worldNewsTitle:'Últimas notícias de fontes globais',breaking:'Últimas',disaster:'Desastres',weatherNews:'Tempo',conflictNews:'Conflito',world:'Mundo',economy:'Economia',science:'Ciência',selectedSources:'Fontes selecionadas',newsUnavailable:'Notícias temporariamente indisponíveis.',noNewsFilter:'Nenhuma manchete recente neste filtro.'});
+
 
 
 let currentLang=loadLocal(STORAGE.lang,null)||((navigator.language||'en').toLowerCase().startsWith('th')?'th':'en');
@@ -490,6 +598,8 @@ function applyLanguage(lang){
   renderDailyBrief();
   renderCameras();
   renderLiveTV();
+  renderHomeNews();
+  renderWorldNews();
 }
 $('#languageSelect').onchange=e=>applyLanguage(e.target.value);
 
@@ -545,4 +655,5 @@ loadConflict().catch(err=>console.error('GlobeSafe conflict feed failed:',err));
 
 setInterval(()=>loadEvents().catch(console.error),5*60*1000);
 setInterval(()=>loadConflict().catch(console.error),15*60*1000);
+setInterval(()=>loadWorldNews().catch(console.error),15*60*1000);
 setInterval(()=>{try{if($('#view-cameras')?.classList.contains('active')&&selectedCameraId)selectCameraById(selectedCameraId);}catch(err){console.error(err);}},60000);
