@@ -312,14 +312,14 @@ function selectTV(id){
     if(fallbackTitle)fallbackTitle.textContent=c.name;
     if(fallbackLink)fallbackLink.href=c.url;
   }
-  $('#tvChannelGrid .tv-channel-card').forEach(el=>el.classList.toggle('active',el.dataset.tvId===id));
+  $$('#tvChannelGrid .tv-channel-card').forEach(el=>el.classList.toggle('active',el.dataset.tvId===id));
 }
 function renderLiveTV(){
   const grid=$('#tvChannelGrid');if(!grid)return;
   const channels=filteredTVChannels();
   if(!channels.some(c=>c.id===selectedTVId))selectedTVId=channels[0]?.id||'';
   grid.innerHTML=channels.length?channels.map(c=>`<button class="tv-channel-card ${c.id===selectedTVId?'active':''}" data-tv-id="${escapeHtml(c.id)}"><span class="tv-card-flag">${c.country==='TH'?'🇹🇭':c.country==='JP'?'🇯🇵':c.country==='SG'?'🇸🇬':c.country==='AU'?'🇦🇺':c.country==='GB'?'🇬🇧':c.country==='FR'?'🇫🇷':c.country==='DE'?'🇩🇪':c.country==='QA'?'🇶🇦':'🌐'}</span><span><strong>${escapeHtml(c.name)}</strong><small>${escapeHtml(c.countryName)} · ${escapeHtml(c.source)}</small></span><em>${c.embed?t('watchHere'):t('officialPage')}</em></button>`).join(''):`<div class="empty-state">${t('noTVChannels')}</div>`;
-  $('[data-tv-id]',grid).forEach(el=>el.onclick=()=>selectTV(el.dataset.tvId));
+  $$('[data-tv-id]',grid).forEach(el=>el.onclick=()=>selectTV(el.dataset.tvId));
   if(selectedTVId)selectTV(selectedTVId);
 }
 $('#tvCountrySelect')?.addEventListener('change',renderLiveTV);
