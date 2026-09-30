@@ -174,12 +174,12 @@ function selectCamera(i){
   const img=$('#cameraFeatureImage'),title=$('#cameraFeatureTitle'),meta=$('#cameraFeatureMeta'),link=$('#cameraFeatureLink');
   if(img){img.src=cameraImageWithBust(c.image);img.onerror=()=>{img.alt=t('cameraUnavailable');};}
   if(title)title.textContent=c.name;if(meta)meta.textContent='USGS · '+c.region;if(link){link.href=c.url;link.textContent=t('openOfficialCamera')+' →';}
-  $('#cameraList .camera-card').forEach((el,n)=>el.classList.toggle('active',n===i));
+  $$('#cameraList .camera-card').forEach((el,n)=>el.classList.toggle('active',n===i));
 }
 function renderCameras(){
   const list=$('#cameraList');if(!list)return;
   list.innerHTML=PUBLIC_CAMERAS.map((c,i)=>`<div class="camera-card ${c.image?'selectable':''} ${i===selectedCameraIndex?'active':''}" data-camera-index="${i}">${c.image?`<img class="camera-thumb" src="${escapeHtml(cameraImageWithBust(c.image))}" alt="">`:''}<small>${escapeHtml(c.region)}</small><strong>${escapeHtml(c.name)}</strong><p>${escapeHtml(c.desc)}</p><a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${c.image?t('openOfficialCamera'):t('openCameraDirectory')} →</a></div>`).join('');
-  $('[data-camera-index]',list).forEach(el=>{el.onclick=e=>{if(e.target.closest('a'))return;selectCamera(Number(el.dataset.cameraIndex));};});
+  $$('[data-camera-index]',list).forEach(el=>{el.onclick=e=>{if(e.target.closest('a'))return;selectCamera(Number(el.dataset.cameraIndex));};});
   selectCamera(selectedCameraIndex);
 }
 
@@ -322,7 +322,7 @@ function buildWindyUrl(){
   return 'https://embed.windy.com/embed2.html?'+q.toString();
 }
 function syncWeatherUI(){
-  $('.weather-layer-btn').forEach(b=>b.classList.toggle('active',b.dataset.weatherOverlay===weatherOverlay));
+  $$('.weather-layer-btn').forEach(b=>b.classList.toggle('active',b.dataset.weatherOverlay===weatherOverlay));
 }
 function setWeatherOverlay(layer){
   if(!['wind','rain'].includes(layer))return;
@@ -330,7 +330,7 @@ function setWeatherOverlay(layer){
   const frame=$('#windyFrame'); if(frame)frame.src=buildWindyUrl();
   syncWeatherUI();
 }
-$('[data-weather-overlay]').forEach(btn=>btn.onclick=()=>setWeatherOverlay(btn.dataset.weatherOverlay));
+$$('[data-weather-overlay]').forEach(btn=>btn.onclick=()=>setWeatherOverlay(btn.dataset.weatherOverlay));
 $('#weatherUseLocation')?.addEventListener('click',()=>{
   const label=$('#weatherLocationLabel');
   if(!navigator.geolocation){if(label)label.textContent=t('weatherLocationUnavailable');return;}
