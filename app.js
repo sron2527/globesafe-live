@@ -45,6 +45,63 @@ function normalizeEonet(f){
   return{id:`eonet-${p.id||Math.random()}`,type,title:p.title||'Natural event',time:p.date||new Date().toISOString(),lon:coords?.[0],lat:coords?.[1],source:'NASA EONET',sourceUrl:(p.sources||[])[0]?.url||p.link||'https://eonet.gsfc.nasa.gov/',description:p.description||'',magnitude:p.magnitudeValue?`${p.magnitudeValue} ${p.magnitudeUnit||''}`.trim():'—'};
 }
 function normalizeQuake(f){const p=f.properties||{},c=f.geometry?.coordinates||[];return{id:`usgs-${f.id}`,type:'earthquake',title:`M${p.mag??'?'} — ${p.place||'Earthquake'}`,time:new Date(p.time).toISOString(),lon:c[0],lat:c[1],depth:c[2],source:'USGS',sourceUrl:p.url,description:p.title||'',magnitude:p.mag??'—',alert:p.alert||'—'};}
+
+function geometryCenter(geometry){
+  if(!geometry)return null;
+  const coords=geometry.coordinates;
+  if(geometry.type==='Point'&&Array.isArray(coords))return coords;
+  const pts=[];
+  const walk=v=>{
+    if(Array.isArray(v)&&v.length>=2&&Number.isFinite(Number(v[0]))&&Number.isFinite(Number(v[1]))&&typeof v[0]!=='object'){
+      pts.push([Number(v[0]),Number(v[1])]);return;
+    }
+    if(Array.isArray(v))v.forEach(walk);
+  };
+  walk(coords);
+  if(!pts.length)return null;
+  const lon=pts.reduce((s,p)=>s+p[0],0)/pts.length;
+  const lat=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+  return [lon,lat];
+}
+function normalizeGdacs(f){
+  const p=f.properties||{},center=geometryCenter(f.geometry);
+  const code=String(p.eventtype||'').toUpperCase();
+  const type=code==='FL'?'flood':code==='TC'?'storm':code==='WF'?'wildfire':code==='VO'?'volcano':'other';
+  const report=(p.url&&typeof p.url==='object'?(p.url.report||p.url.details):p.url)||`https://www.gdacs.org/report.aspx?eventid=${encodeURIComponent(p.eventid||'')}&eventtype=${encodeURIComponent(code)}`;
+  return {
+    id:`gdacs-${code}-${p.eventid||p.episodeid||Math.random()}`,
+    type,
+    title:p.name||p.description||`${typeMeta[type]?.label||'Disaster'} · ${p.country||'Global'}`,
+    time:p.todate||p.fromdate||new Date().toISOString(),
+    lon:center?.[0],lat:center?.[1],
+    source:'GDACS',
+    sourceUrl:report,
+    description:p.description||p.htmldescription||p.htDescription||'Global Disaster Alert and Coordination System event.',
+    magnitude:p.alertscore??p.severitydata?.severity??'—',
+    alert:String(p.alertlevel||'').toLowerCase(),
+    country:p.country||''
+  };
+}
+function activeCuratedAlerts(){
+  const now=Date.now();
+  const alerts=[
+    {
+      id:'local-bangkok-flood-20260929',
+      type:'flood',
+      title:'Bangkok flooding — 29 districts remain affected / น้ำท่วมกรุงเทพฯ',
+      time:'2026-09-29T14:40:00+07:00',
+      validUntil:'2026-10-02T23:59:59+07:00',
+      lon:100.5018,lat:13.7563,
+      source:'Bangkok Metropolitan Administration / PRD Thailand',
+      sourceUrl:'https://www.prd.go.th/th/content/category/detail/id/33/iid/546339',
+      description:'Official Bangkok announcement dated 29 Sep 2026: 29 districts remained under disaster designation after severe flooding; local road flooding may persist while drainage continues.',
+      magnitude:'Local official alert',
+      alert:'orange',
+      curated:true
+    }
+  ];
+  return alerts.filter(a=>!a.validUntil||now<=new Date(a.validUntil).getTime());
+}
 async function fetchJson(url,timeout=10000){const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),timeout);try{const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
 
 function fetchUsgsJsonp(timeout=12000){
@@ -62,20 +119,37 @@ function fetchUsgsJsonp(timeout=12000){
 }
 async function loadEvents(){
   $('#lastUpdated').textContent='Updating…';
-  let quakes=[],natural=[],sourceBits=[];
-  const [q,e]=await Promise.allSettled([
+  let quakes=[],natural=[],gdacs=[],sourceBits=[];
+  const now=new Date(),from=new Date(Date.now()-14*86400000);
+  const ymd=d=>d.toISOString().slice(0,10);
+  const gdacsUrl=`https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtypes=FL,TC,WF,VO&fromdate=${ymd(from)}&todate=${ymd(now)}`;
+  const [q,e,g]=await Promise.allSettled([
     fetchJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',12000),
-    fetchJson('https://eonet.gsfc.nasa.gov/api/v3/events/geojson?status=open&days=30&limit=160',12000)
+    fetchJson('https://eonet.gsfc.nasa.gov/api/v3/events/geojson?status=open&days=30&limit=200',12000),
+    fetchJson(gdacsUrl,14000)
   ]);
   if(q.status==='fulfilled'){quakes=(q.value.features||[]).map(normalizeQuake);sourceBits.push('USGS');}
   else{
     try{const jq=await fetchUsgsJsonp();quakes=(jq.features||[]).map(normalizeQuake);sourceBits.push('USGS JSONP');}catch{}
   }
-  if(e.status==='fulfilled'){natural=(e.value.features||[]).map(normalizeEonet).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));sourceBits.push('NASA EONET');}
-  const incoming=[...quakes,...natural].filter(x=>Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  if(e.status==='fulfilled'){
+    natural=(e.value.features||[]).map(normalizeEonet).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));
+    sourceBits.push('NASA EONET');
+  }
+  if(g.status==='fulfilled'){
+    gdacs=(g.value.features||[]).map(normalizeGdacs).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));
+    sourceBits.push('GDACS');
+  }
+  const curated=activeCuratedAlerts();
+  if(curated.length)sourceBits.push('Official local alerts');
+  const seen=new Set();
+  const incoming=[...curated,...quakes,...gdacs,...natural]
+    .filter(x=>Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon)))
+    .filter(x=>{const key=x.id||`${x.type}|${x.title}|${x.lat.toFixed?.(2)}|${x.lon.toFixed?.(2)}`;if(seen.has(key))return false;seen.add(key);return true;})
+    .sort((a,b)=>new Date(b.time)-new Date(a.time));
   if(incoming.length){
     state.events=incoming;
-    try{localStorage.setItem('globesafe.lastGoodEvents.v3',JSON.stringify({time:Date.now(),events:state.events.slice(0,700)}));}catch{}
+    try{localStorage.setItem('globesafe.lastGoodEvents.v3',JSON.stringify({time:Date.now(),events:state.events.slice(0,900)}));}catch{}
   }else{
     try{const cached=JSON.parse(localStorage.getItem('globesafe.lastGoodEvents.v3')||'null');if(cached?.events?.length){state.events=cached.events;sourceBits.push('cached');}}catch{}
   }
@@ -220,8 +294,12 @@ function checkTrackedAlerts(){if(!state.watchAreas.length)return;let seen=new Se
 
 /* Version 3 — 3D live globe, multilingual UI, daily brief and PWA */
 function eventSeverity(e){
+  const alert=String(e.alert||'').toLowerCase();
+  if(alert==='red')return'critical';
+  if(alert==='orange')return'high';
+  if(alert==='yellow')return'moderate';
   if(e.type==='earthquake'){
-    const mag=Number(e.magnitude);if(e.alert==='red'||mag>=6.5)return'critical';if(e.alert==='orange'||mag>=5.5)return'high';if(e.alert==='yellow'||mag>=4.5)return'moderate';return'active';
+    const mag=Number(e.magnitude);if(mag>=6.5)return'critical';if(mag>=5.5)return'high';if(mag>=4.5)return'moderate';return'active';
   }
   const mv=Number(e.magnitude);if(Number.isFinite(mv)){if(mv>=8)return'critical';if(mv>=5)return'high';if(mv>=2)return'moderate';}
   return'active';
