@@ -995,3 +995,131 @@
   }
   .world-news-grid .news-card{padding:14px}
 }
+
+/* V4.6 — Community Live */
+.community-kicker{color:#70e5ff}
+.community-status{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border:1px solid var(--line);border-radius:999px;
+  color:var(--muted);font-size:9px;background:rgba(255,255,255,.025)
+}
+.community-status>span{width:7px;height:7px;border-radius:50%;background:#8090a0}
+.community-status.online{color:#9af0ca;border-color:rgba(92,231,168,.18);background:rgba(92,231,168,.05)}
+.community-status.online>span{background:#5ce7a8;box-shadow:0 0 12px #5ce7a8}
+.community-status.error{color:#ff9aa8;border-color:rgba(255,79,103,.18)}
+.community-status.error>span{background:#ff4f67}
+
+.community-shell{
+  max-width:1224px;margin:0 auto 28px;padding:0 28px;
+  display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px
+}
+.community-sidebar{display:flex;flex-direction:column;gap:12px}
+.community-profile-card,.community-safety-note,.community-chat-card{
+  border:1px solid var(--line);border-radius:18px;background:var(--card)
+}
+.community-profile-card{padding:15px}
+.community-profile-card>small{display:block;color:#6f8aa2;font-size:8px;font-weight:800;letter-spacing:1px;margin-bottom:8px}
+.community-name-row{display:grid;grid-template-columns:1fr auto;gap:7px}
+.community-name-row input{
+  min-width:0;border:1px solid var(--line);background:#091827;color:var(--text);
+  border-radius:10px;padding:10px 11px;outline:none
+}
+.community-profile-card p,.community-safety-note p{
+  margin:9px 0 0;color:var(--muted);font-size:9px;line-height:1.55
+}
+.community-room-list{
+  display:grid;gap:7px;padding:8px;border:1px solid var(--line);border-radius:18px;background:var(--card)
+}
+.community-room{
+  border:1px solid transparent;background:transparent;color:var(--text);
+  display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:center;
+  text-align:left;border-radius:12px;padding:9px;cursor:pointer
+}
+.community-room>span{font-size:20px;text-align:center}
+.community-room strong{display:block;font-size:11px}
+.community-room small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.community-room:hover,.community-room.active{
+  border-color:rgba(57,217,255,.18);background:rgba(57,217,255,.055)
+}
+.community-safety-note{padding:14px}
+.community-safety-note b{font-size:10px;color:#ffd58a}
+
+.community-chat-card{min-height:620px;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.community-chat-head{
+  min-height:62px;padding:11px 14px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.community-chat-head>div:first-child{display:flex;align-items:center;gap:10px}
+.community-chat-head>div:first-child>span{font-size:25px}
+.community-chat-head strong{display:block;font-size:13px}
+.community-chat-head small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.community-live-pill{
+  font-size:8px;font-weight:900;letter-spacing:.7px;padding:5px 8px;border-radius:999px;
+  color:#83f1bf;border:1px solid rgba(92,231,168,.15);background:rgba(92,231,168,.055)
+}
+.community-messages{
+  height:465px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(180deg,rgba(6,17,30,.35),rgba(6,17,30,.1))
+}
+.community-empty{
+  margin:auto;color:var(--muted);font-size:10px;text-align:center;padding:30px
+}
+.community-empty.error{color:#ff9aa8}
+.community-message{display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px;max-width:82%}
+.community-message.mine{margin-left:auto;grid-template-columns:minmax(0,1fr) 34px}
+.community-message.mine .community-avatar{grid-column:2;grid-row:1}
+.community-message.mine .community-message-body{grid-column:1;grid-row:1;background:rgba(57,217,255,.075);border-color:rgba(57,217,255,.17)}
+.community-avatar{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  color:#c6f5ff;background:#10283c;border:1px solid rgba(57,217,255,.15);font-size:12px;font-weight:900
+}
+.community-message-body{
+  min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.028)
+}
+.community-message-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px}
+.community-message-meta strong{font-size:10px}
+.community-message-meta small{color:#667e93;font-size:7px;white-space:nowrap}
+.community-message-body p{
+  margin:0;color:#d8e6f3;font-size:11px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere
+}
+.community-message-actions{display:flex;justify-content:flex-end;margin-top:5px;min-height:16px}
+.community-message-actions button{
+  border:0;background:transparent;color:#657d91;font-size:7px;padding:2px 0;cursor:pointer
+}
+.community-message-actions button:hover{color:#ff9aa8}
+
+.community-compose{border-top:1px solid var(--line);padding:11px;background:#091624}
+.community-compose textarea{
+  width:100%;resize:none;border:0;outline:none;color:var(--text);background:transparent;
+  font:11px/1.5 Inter,sans-serif;min-height:50px;max-height:120px
+}
+.community-compose-bottom{display:flex;align-items:center;gap:10px}
+.community-compose-bottom>span:first-child{color:#657d91;font-size:8px}
+.community-send-state{margin-left:auto;font-size:8px;color:var(--muted)}
+.community-send-state.ok{color:#79e4b2}.community-send-state.error{color:#ff92a1}
+.community-compose .primary-btn{min-width:86px}
+.community-compose .primary-btn:disabled{opacity:.45;cursor:not-allowed}
+.community-disclaimer{margin-bottom:55px}
+
+@media(max-width:900px){
+  .community-shell{grid-template-columns:240px minmax(0,1fr)}
+}
+@media(max-width:760px){
+  .community-page-head{align-items:flex-start}
+  .community-status{margin-top:8px}
+  .community-shell{padding:0 14px;grid-template-columns:1fr;gap:10px}
+  .community-sidebar{display:block}
+  .community-profile-card{margin-bottom:9px}
+  .community-room-list{
+    grid-auto-flow:column;grid-auto-columns:78%;grid-template-columns:none;overflow-x:auto;
+    scroll-snap-type:x proximity;scrollbar-width:none;margin-bottom:9px
+  }
+  .community-room-list::-webkit-scrollbar{display:none}
+  .community-room{scroll-snap-align:start}
+  .community-safety-note{margin-bottom:9px}
+  .community-chat-card{min-height:580px}
+  .community-messages{height:410px;padding:11px}
+  .community-message{max-width:92%}
+  .community-message-body p{font-size:11px}
+  .community-compose{position:sticky;bottom:72px;z-index:3}
+}
