@@ -123,11 +123,13 @@ async function loadEvents(){
   let quakes=[],natural=[],gdacs=[],sourceBits=[];
   const now=new Date(),from=new Date(Date.now()-14*86400000);
   const ymd=d=>d.toISOString().slice(0,10);
-  const gdacsUrl=`https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtypes=FL,TC,WF,VO&fromdate=${ymd(from)}&todate=${ymd(now)}`;
-  const [q,e,g]=await Promise.allSettled([
+  const gdacsFloodUrl=`https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=FL&fromdate=${ymd(from)}&todate=${ymd(now)}&alertlevel=red%3Borange%3Bgreen`;
+  const gdacsOtherUrl=`https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC%3BWF%3BVO&fromdate=${ymd(from)}&todate=${ymd(now)}&alertlevel=red%3Borange%3Bgreen`;
+  const [q,e,gf,go]=await Promise.allSettled([
     fetchJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',12000),
     fetchJson('https://eonet.gsfc.nasa.gov/api/v3/events/geojson?status=open&days=30&limit=200',12000),
-    fetchJson(gdacsUrl,14000)
+    fetchJson(gdacsFloodUrl,14000),
+    fetchJson(gdacsOtherUrl,14000)
   ]);
   if(q.status==='fulfilled'){quakes=(q.value.features||[]).map(normalizeQuake);sourceBits.push('USGS');}
   else{
@@ -137,8 +139,12 @@ async function loadEvents(){
     natural=(e.value.features||[]).map(normalizeEonet).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));
     sourceBits.push('NASA EONET');
   }
-  if(g.status==='fulfilled'){
-    gdacs=(g.value.features||[]).map(normalizeGdacs).filter(x=>['storm','flood','wildfire','volcano'].includes(x.type));
+  if(gf.status==='fulfilled'){
+    gdacs.push(...(gf.value.features||[]).map(normalizeGdacs).filter(x=>x.type==='flood'));
+    sourceBits.push('GDACS Floods');
+  }
+  if(go.status==='fulfilled'){
+    gdacs.push(...(go.value.features||[]).map(normalizeGdacs).filter(x=>['storm','wildfire','volcano'].includes(x.type)));
     sourceBits.push('GDACS');
   }
   const curated=activeCuratedAlerts();
@@ -208,10 +214,12 @@ function renderMap(){
   $('#mapEventCount').textContent=state.currentFilter==='conflict'?`${state.conflictReports.length} reports`:list.length;
   $('#filterTitle').textContent=state.currentFilter==='all'?'Latest events':state.currentFilter==='conflict'?'War & conflict reports':(typeMeta[state.currentFilter]?.label||'Events');
   const side=$('#mapEventList');
+  const floodCountries=state.currentFilter==='flood'?[...new Set(list.map(e=>e.country).filter(Boolean))]:[];
   if(state.currentFilter==='conflict'){
     side.innerHTML=state.conflictReports.length?state.conflictReports.map(r=>`<a class="map-event-card" href="${escapeHtml(r.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(r.title)}</strong><small>Media report · ${escapeHtml(r.domain||r.sourcecountry||'GDELT')}</small></a>`).join(''):'<div class="empty-state">Conflict media feed is unavailable. This layer never fabricates map locations when verified coordinates are missing.</div>';
   }else{
-    side.innerHTML=list.length?list.slice(0,70).map(e=>`<button class="map-event-card" data-event-id="${escapeHtml(e.id)}"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.source)} · ${ago(e.time)}</small></button>`).join(''):'<div class="empty-state">No events in this filter right now.</div>';
+    const floodSummary=state.currentFilter==='flood'&&floodCountries.length?`<div class="flood-country-summary"><b>${floodCountries.length} countries in current flood feed</b><span>${floodCountries.slice(0,18).map(c=>`<i>${escapeHtml(c)}</i>`).join('')}</span></div>`:'';
+    side.innerHTML=floodSummary+(list.length?list.slice(0,70).map(e=>`<button class="map-event-card" data-event-id="${escapeHtml(e.id)}"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.country||'')} ${e.country?'· ':''}${escapeHtml(e.source)} · ${ago(e.time)}</small></button>`).join(''):'<div class="empty-state">No events in this filter right now.</div>');
     $$('[data-event-id]',side).forEach(b=>b.onclick=()=>openEvent(b.dataset.eventId));
   }
 }
