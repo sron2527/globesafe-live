@@ -751,3 +751,40 @@
   .directory-source-icon{width:40px;height:40px}
   .directory-open-btn{min-height:42px;font-size:11px}
 }
+
+/* V4.1 — flood country summary */
+.flood-country-summary{
+  margin:0 0 9px;
+  padding:12px;
+  border:1px solid rgba(57,217,255,.18);
+  border-radius:12px;
+  background:rgba(57,217,255,.045);
+}
+.flood-country-summary>b{
+  display:block;
+  font-size:11px;
+  color:#c7f7ff;
+  margin-bottom:8px;
+}
+.flood-country-summary>span{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.flood-country-summary i{
+  font-style:normal;
+  font-size:8px;
+  padding:4px 7px;
+  border-radius:999px;
+  color:#9bdff0;
+  background:rgba(57,217,255,.07);
+  border:1px solid rgba(57,217,255,.12);
+}
+@media(max-width:760px){
+  .flood-country-summary{
+    position:sticky;
+    top:0;
+    z-index:2;
+    backdrop-filter:blur(12px);
+  }
+}
