@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=38" />
+  <link rel="stylesheet" href="./style.css?v=39" />
 </head>
 <body>
   <div class="app-shell">
@@ -303,7 +303,7 @@
           </select>
         </div>
         <div class="camera-layout">
-          <div class="camera-feature">
+          <div class="camera-feature" id="cameraFeaturePane">
             <div class="camera-live-view"><div class="camera-live-top"><span class="camera-live-badge" id="cameraFeatureBadge">● LIVE SNAPSHOT</span><strong id="cameraFeatureTitle">USGS Kīlauea V1cam</strong></div><img id="cameraFeatureImage" alt="Public live camera snapshot" /><div class="camera-feature-directory" id="cameraFeatureDirectory" hidden><div class="camera-network-icon">◉</div><strong id="cameraDirectoryTitle">Official public camera network</strong><p id="cameraDirectoryDesc">This network does not provide an embeddable snapshot. Open the official source to view available cameras.</p></div><div class="camera-live-bottom"><span id="cameraFeatureMeta">USGS · Hawaiʻi, USA</span><a id="cameraFeatureLink" class="source-link" target="_blank" rel="noopener">Open official camera →</a></div></div>
           </div>
           <div class="camera-list" id="cameraList"></div>
@@ -413,6 +413,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=38"></script>
+  <script src="./app.js?v=39"></script>
 </body>
 </html>
