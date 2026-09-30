@@ -30,6 +30,7 @@
       <nav class="desktop-nav" aria-label="Main navigation">
         <button class="nav-btn active" data-view="home" data-i18n="overview">Overview</button>
         <button class="nav-btn" data-view="map" data-i18n="liveMap">Live Map</button>
+        <button class="nav-btn" data-view="weather" data-i18n="weatherLive">Weather Live</button>
         <button class="nav-btn" data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
         <button class="nav-btn" data-view="cameras" data-i18n="cameras">Cameras</button>
         <button class="nav-btn" data-view="radio" data-i18n="worldFM">World FM</button>
@@ -54,6 +55,7 @@
     <div class="mobile-menu" id="mobileMenu">
       <button data-view="home" data-i18n="overview">Overview</button>
       <button data-view="map" data-i18n="liveMap">Live Map</button>
+      <button data-view="weather" data-i18n="weatherLive">Weather Live</button>
       <button data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
       <button data-view="cameras" data-i18n="cameras">Cameras</button>
       <button data-view="radio" data-i18n="worldFM">World FM</button>
@@ -192,6 +194,35 @@
           </aside>
         </div>
         <div class="conflict-disclaimer" data-i18n-html="conflictDisclaimer"><b>War & Conflict:</b> the MVP displays recent media-reported conflict coverage separately. Do not use GlobeSafe Live as a substitute for official government, civil-defense, embassy, or humanitarian security instructions.</div>
+      </section>
+
+      <section class="view" id="view-weather">
+        <div class="page-head weather-page-head">
+          <div>
+            <p class="kicker" data-i18n="weatherKicker">LIVE WEATHER</p>
+            <h1 data-i18n="weatherTitle">Weather radar, wind & rain</h1>
+            <p data-i18n="weatherDesc">Explore global wind and Rain & Thunder layers with an official Windy embedded map. Use the timeline inside the map to move through forecast hours.</p>
+          </div>
+          <div class="weather-source-badge">Windy Embed</div>
+        </div>
+        <div class="weather-toolbar">
+          <div class="weather-layer-switch" role="group" aria-label="Weather layer">
+            <button class="weather-layer-btn" data-weather-overlay="wind">≋ <span data-i18n="weatherWind">Wind</span></button>
+            <button class="weather-layer-btn active" data-weather-overlay="rain">☔ <span data-i18n="weatherRainThunder">Rain & Thunder</span></button>
+          </div>
+          <button class="secondary-btn small" id="weatherUseLocation">◎ <span data-i18n="weatherUseLocation">Use my location</span></button>
+          <span class="weather-location-label" id="weatherLocationLabel" data-i18n="weatherGlobalView">Global / Southeast Asia view</span>
+        </div>
+        <div class="weather-embed-card">
+          <iframe id="windyFrame" title="Windy live weather map" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
+            src="https://embed.windy.com/embed2.html?lat=13.7563&lon=100.5018&zoom=5&level=surface&overlay=rain&menu=&message=true&marker=&calendar=now&pressure=true&type=map&location=coordinates&detail=&detailLat=13.7563&detailLon=100.5018&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1">
+          </iframe>
+        </div>
+        <div class="weather-note">
+          <strong data-i18n="weatherNoteTitle">Weather layer note</strong>
+          <p data-i18n="weatherNote">Weather visualizations are provided by the embedded Windy service. GlobeSafe Live keeps disaster-event alerts and official-source links separate from forecast graphics.</p>
+          <a href="https://www.windy.com/" target="_blank" rel="noopener" data-i18n="openWindy">Open Windy.com →</a>
+        </div>
       </section>
 
       <section class="view" id="view-event">
