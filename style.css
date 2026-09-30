@@ -788,3 +788,42 @@
     backdrop-filter:blur(12px);
   }
 }
+
+/* V4.2 — media-reported conflict map */
+.map-marker-conflict{color:#ffd167!important}
+.map-marker-conflict span{
+  border-radius:2px!important;
+  transform:rotate(45deg);
+  border-color:#fff3c7;
+  background:currentColor;
+}
+.conflict-map-summary{
+  margin:0 0 9px;
+  padding:12px;
+  border:1px solid rgba(255,209,103,.2);
+  border-radius:12px;
+  background:rgba(255,209,103,.055);
+}
+.conflict-map-summary b{
+  display:block;
+  color:#ffe3a1;
+  font-size:11px;
+  margin-bottom:6px;
+}
+.conflict-map-summary p{
+  margin:0;
+  color:#b8a980;
+  font-size:9px;
+  line-height:1.5;
+}
+.conflict-location-card{border-color:rgba(255,209,103,.11)}
+.conflict-location-card:hover{border-color:rgba(255,209,103,.28);background:rgba(255,209,103,.045)}
+.sidebar-subhead{
+  padding:12px 8px 6px;
+  color:#ffd167;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.conflict-popup-note{color:#d8bd7c;font-size:10px}
