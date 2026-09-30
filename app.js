@@ -2,7 +2,7 @@ const STORAGE = {
   areas:'globesafe.watchAreas.v2', countries:'globesafe.favoriteCountries.v2', stations:'globesafe.favoriteStations.v2', seen:'globesafe.seenEvents.v2', theme:'globesafe.theme.v2', lang:'globesafe.language.v3'
 };
 const state = {
-  events: [], conflictReports: [], map: null, mapReady:false, mapMarkers:[], watchMarkers:[], heroGlobe:null, heroGlobeReady:false, globePaused:false, currentFilter: 'all', selectedEvent: null, stations: [],
+  events: [], conflictReports: [], conflictPoints: [], map: null, mapReady:false, mapMarkers:[], watchMarkers:[], heroGlobe:null, heroGlobeReady:false, globePaused:false, currentFilter: 'all', selectedEvent: null, stations: [],
   watchAreas: loadLocal(STORAGE.areas, []), favoriteCountries: loadLocal(STORAGE.countries, []), favoriteStations: loadLocal(STORAGE.stations, []),
   favoritesOnly:false, hasLoadedEvents:false
 };
@@ -10,7 +10,7 @@ const state = {
 const typeMeta = {
   earthquake:{label:'Earthquake',icon:'⌁',class:'earthquake'}, storm:{label:'Storm',icon:'◉',class:'storm'},
   flood:{label:'Flood',icon:'≋',class:'flood'}, wildfire:{label:'Wildfire',icon:'♨',class:'wildfire'},
-  volcano:{label:'Volcano',icon:'▲',class:'volcano'}, other:{label:'Natural event',icon:'•',class:'storm'}
+  volcano:{label:'Volcano',icon:'▲',class:'volcano'}, conflict:{label:'Conflict media location',icon:'⚠',class:'conflict'}, other:{label:'Natural event',icon:'•',class:'storm'}
 };
 const $ = (s, el=document)=>el.querySelector(s);
 const $$ = (s, el=document)=>[...el.querySelectorAll(s)];
@@ -171,7 +171,7 @@ async function loadEvents(){
   $('#mapUpdated').textContent=state.events.length?`Updated ${time}`:'Live feeds unavailable';
   document.body.dataset.liveSources=sourceBits.join(',');
 }
-function renderCounts(){const counts={earthquake:0,storm:0,flood:0,wildfire:0,volcano:0};state.events.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);Object.keys(counts).forEach(k=>{const el=$(`#count-${k}`);if(el)el.textContent=counts[k];});$('#statEvents').textContent=state.events.length;$('#statQuakes').textContent=counts.earthquake;$('#count-conflict').textContent=state.conflictReports.length||'LIVE';renderPreferenceCounts();}
+function renderCounts(){const counts={earthquake:0,storm:0,flood:0,wildfire:0,volcano:0};state.events.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);Object.keys(counts).forEach(k=>{const el=$(`#count-${k}`);if(el)el.textContent=counts[k];});$('#statEvents').textContent=state.events.length;$('#statQuakes').textContent=counts.earthquake;$('#count-conflict').textContent=state.conflictPoints.length||state.conflictReports.length||'LIVE';renderPreferenceCounts();}
 function eventRow(e){const m=typeMeta[e.type]||typeMeta.other;return`<button class="event-row" data-event-id="${escapeHtml(e.id)}"><span class="event-badge ${m.class}">${m.icon}</span><span class="event-main"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(m.label)} · ${ago(e.time)} · ${escapeHtml(e.source)}</small></span><span class="severity">${e.type==='earthquake'&&Number(e.magnitude)>=5?'SIGNIFICANT':'ACTIVE'}</span></button>`;}
 function renderHomeEvents(){const el=$('#homeEventList'),list=state.events.slice(0,8);el.innerHTML=list.length?list.map(eventRow).join(''):'<div class="empty-state">Live feeds could not be reached. Check your internet connection and refresh.</div>';$$('[data-event-id]',el).forEach(b=>b.onclick=()=>openEvent(b.dataset.eventId));}
 
@@ -204,19 +204,34 @@ function setFilter(filter){state.currentFilter=filter;$$('#mapFilters .filter-ch
 function renderMap(){
   if(!state.map||!state.mapReady)return;
   state.mapMarkers.forEach(m=>m.remove());state.mapMarkers=[];
-  const list=state.currentFilter==='all'?state.events:state.currentFilter==='conflict'?[]:state.events.filter(e=>e.type===state.currentFilter);
+  const isConflict=state.currentFilter==='conflict';
+  const list=state.currentFilter==='all'?state.events:isConflict?state.conflictPoints:state.events.filter(e=>e.type===state.currentFilter);
   list.slice(0,350).forEach(e=>{
-    const el=markerElement(e.type,eventSeverity(e));
-    const popup=new maplibregl.Popup({offset:16,closeButton:true}).setHTML(`<b>${escapeHtml(e.title)}</b><br>${escapeHtml(e.source)} · ${ago(e.time)}<br><button class="popup-detail" onclick="window.openGlobeEvent('${escapeHtml(e.id)}')">Details</button>`);
-    const marker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([e.lon,e.lat]).setPopup(popup).addTo(state.map);
-    state.mapMarkers.push(marker);
+    if(isConflict){
+      const el=markerElement('conflict','moderate');
+      const popup=new maplibregl.Popup({offset:16,closeButton:true}).setHTML(`<b>${escapeHtml(e.title)}</b><br><span class="conflict-popup-note">${escapeHtml(t('conflictGeoShort'))}</span><br><small>GDELT GEO · ${escapeHtml(e.coverageWindow||'24h')}</small>`);
+      const marker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([e.lon,e.lat]).setPopup(popup).addTo(state.map);
+      state.mapMarkers.push(marker);
+    }else{
+      const el=markerElement(e.type,eventSeverity(e));
+      const popup=new maplibregl.Popup({offset:16,closeButton:true}).setHTML(`<b>${escapeHtml(e.title)}</b><br>${escapeHtml(e.source)} · ${ago(e.time)}<br><button class="popup-detail" onclick="window.openGlobeEvent('${escapeHtml(e.id)}')">Details</button>`);
+      const marker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([e.lon,e.lat]).setPopup(popup).addTo(state.map);
+      state.mapMarkers.push(marker);
+    }
   });
-  $('#mapEventCount').textContent=state.currentFilter==='conflict'?`${state.conflictReports.length} reports`:list.length;
+  $('#mapEventCount').textContent=isConflict?`${state.conflictPoints.length} mapped · ${state.conflictReports.length} reports`:list.length;
   $('#filterTitle').textContent=state.currentFilter==='all'?'Latest events':state.currentFilter==='conflict'?'War & conflict reports':(typeMeta[state.currentFilter]?.label||'Events');
   const side=$('#mapEventList');
   const floodCountries=state.currentFilter==='flood'?[...new Set(list.map(e=>e.country).filter(Boolean))]:[];
-  if(state.currentFilter==='conflict'){
-    side.innerHTML=state.conflictReports.length?state.conflictReports.map(r=>`<a class="map-event-card" href="${escapeHtml(r.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(r.title)}</strong><small>Media report · ${escapeHtml(r.domain||r.sourcecountry||'GDELT')}</small></a>`).join(''):'<div class="empty-state">Conflict media feed is unavailable. This layer never fabricates map locations when verified coordinates are missing.</div>';
+  if(isConflict){
+    const pointCards=state.conflictPoints.length?state.conflictPoints.slice(0,60).map(p=>`<button class="map-event-card conflict-location-card" data-conflict-id="${escapeHtml(p.id)}"><strong>${escapeHtml(p.title)}</strong><small>${t('mediaLocation')} · GDELT GEO · ${escapeHtml(p.coverageWindow||'24h')}</small></button>`).join(''):'<div class="empty-state">${t('noConflictLocations')}</div>';
+    const reportCards=state.conflictReports.length?state.conflictReports.slice(0,16).map(r=>`<a class="map-event-card" href="${escapeHtml(r.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(r.title)}</strong><small>${t('newsReport')} · ${escapeHtml(r.domain||r.sourcecountry||'GDELT')}</small></a>`).join(''):'';
+    side.innerHTML=`<div class="conflict-map-summary"><b>${state.conflictPoints.length} ${t('mediaLocations')}</b><p>${t('conflictGeoNotice')}</p></div>`+pointCards+(reportCards?`<div class="sidebar-subhead">${t('latestConflictReports')}</div>`+reportCards:'');
+    $('[data-conflict-id]',side).forEach(btn=>btn.onclick=()=>{
+      const p=state.conflictPoints.find(x=>x.id===btn.dataset.conflictId);if(!p)return;
+      state.map.flyTo({center:[p.lon,p.lat],zoom:5,essential:true});
+      new maplibregl.Popup({closeButton:true}).setLngLat([p.lon,p.lat]).setHTML(`<b>${escapeHtml(p.title)}</b><br><span class="conflict-popup-note">${escapeHtml(t('conflictGeoShort'))}</span>`).addTo(state.map);
+    });
   }else{
     const floodSummary=state.currentFilter==='flood'&&floodCountries.length?`<div class="flood-country-summary"><b>${floodCountries.length} countries in current flood feed</b><span>${floodCountries.slice(0,18).map(c=>`<i>${escapeHtml(c)}</i>`).join('')}</span></div>`:'';
     side.innerHTML=floodSummary+(list.length?list.slice(0,70).map(e=>`<button class="map-event-card" data-event-id="${escapeHtml(e.id)}"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.country||'')} ${e.country?'· ':''}${escapeHtml(e.source)} · ${ago(e.time)}</small></button>`).join(''):'<div class="empty-state">No events in this filter right now.</div>');
@@ -242,7 +257,54 @@ function renderWatchAreasOnMap(){
 window.openGlobeEvent=openEvent;
 function openEvent(id){const e=state.events.find(x=>x.id===id);if(!e)return;state.selectedEvent=e;const m=typeMeta[e.type]||typeMeta.other;const nearby=nearestWatchArea(e);$('#eventDetail').innerHTML=`<article class="detail-card"><div class="detail-hero"><p class="kicker">${escapeHtml(m.label.toUpperCase())}</p><h1>${escapeHtml(e.title)}</h1><div class="detail-meta"><span>${fmtDate(e.time)}</span><span>Source: ${escapeHtml(e.source)}</span><span>${Number(e.lat).toFixed(3)}, ${Number(e.lon).toFixed(3)}</span>${nearby?`<span>Nearest watch: ${escapeHtml(nearby.area.name)} · ${nearby.distance.toFixed(0)} km</span>`:''}</div></div><div class="detail-grid"><div><small>Magnitude / intensity</small><b>${escapeHtml(e.magnitude??'—')}</b></div><div><small>Depth</small><b>${e.depth!=null?`${escapeHtml(e.depth)} km`:'—'}</b></div><div><small>Status</small><b>Public feed</b></div></div><div class="detail-body"><p>${escapeHtml(e.description||'No additional description is available from this feed.')}</p><p>This page is for situational awareness. Confirm urgent safety instructions with local authorities.</p><a class="source-link" href="${escapeHtml(e.sourceUrl)}" target="_blank" rel="noopener">Open original source →</a></div></article>`;showView('event');}
 
-async function loadConflict(){const url='https://api.gdeltproject.org/api/v2/doc/doc?query=(%22armed%20conflict%22%20OR%20airstrike%20OR%20shelling%20OR%20%22missile%20attack%22)&mode=artlist&maxrecords=18&timespan=24h&sort=datedesc&format=json';try{const d=await fetchJson(url,12000);state.conflictReports=(d.articles||[]).slice(0,18).map(x=>({title:x.title||'Conflict report',url:x.url||'#',domain:x.domain||'',sourcecountry:x.sourcecountry||'',seen:x.seendate||''}));}catch{state.conflictReports=[];}renderConflict();renderCounts();if(state.map&&state.currentFilter==='conflict')renderMap();}
+
+function htmlText(html){
+  if(!html)return'';
+  const div=document.createElement('div');div.innerHTML=String(html);
+  return (div.textContent||'').replace(/\s+/g,' ').trim();
+}
+function firstHref(html){
+  if(!html)return'';
+  const div=document.createElement('div');div.innerHTML=String(html);
+  const a=div.querySelector('a[href]');
+  return a?.href||'';
+}
+function normalizeConflictGeo(f,index=0){
+  const p=f.properties||{},center=geometryCenter(f.geometry);
+  if(!center)return null;
+  const rawHtml=p.html||p.description||p.popup||'';
+  const rawName=p.name||p.fullname||p.location||p.title||'';
+  const cleanHtml=htmlText(rawHtml);
+  const title=String(rawName||cleanHtml.split(/\s[-–—|]\s/)[0]||'Conflict-related media location').trim().slice(0,180);
+  const count=Number(p.count??p.Count??p.articlecount??p.articleCount??p.weight??1);
+  return{
+    id:`gdelt-geo-${index}-${Number(center[1]).toFixed(3)}-${Number(center[0]).toFixed(3)}`,
+    type:'conflict',
+    title,
+    lat:Number(center[1]),lon:Number(center[0]),
+    source:'GDELT GEO',
+    sourceUrl:firstHref(rawHtml)||'https://api.gdeltproject.org/api/v2/geo/geo',
+    mentionCount:Number.isFinite(count)?count:1,
+    description:'Location mentioned near conflict-related terms in recent news coverage. This is not a verified strike, battlefield, or evacuation location.',
+    coverageWindow:'24h'
+  };
+}
+async function loadConflict(){
+  const query='("armed conflict" OR airstrike OR shelling OR "missile attack" OR "drone strike" OR bombardment)';
+  const docUrl='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent(query)+'&mode=artlist&maxrecords=24&timespan=24h&sort=datedesc&format=json';
+  const geoUrl='https://api.gdeltproject.org/api/v2/geo/geo?query='+encodeURIComponent(query)+'&mode=pointdata&format=geojson&timespan=24h&maxpoints=180&geores=2';
+  const [docs,geo]=await Promise.allSettled([fetchJson(docUrl,12000),fetchJson(geoUrl,15000)]);
+  if(docs.status==='fulfilled'){
+    const d=docs.value||{};
+    state.conflictReports=(d.articles||[]).slice(0,24).map(x=>({title:x.title||'Conflict report',url:x.url||'#',domain:x.domain||'',sourcecountry:x.sourcecountry||'',seen:x.seendate||''}));
+  }else state.conflictReports=[];
+  if(geo.status==='fulfilled'){
+    state.conflictPoints=(geo.value.features||[]).map((f,i)=>normalizeConflictGeo(f,i)).filter(Boolean).slice(0,180);
+  }else state.conflictPoints=[];
+  renderConflict();
+  renderCounts();
+  if(state.map&&state.currentFilter==='conflict')renderMap();
+}
 function renderConflict(){const el=$('#conflictList'),list=state.conflictReports.slice(0,6);el.innerHTML=list.length?list.map(r=>`<div class="conflict-item"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a><small>${escapeHtml(r.domain||r.sourcecountry||'GDELT')} · media report</small></div>`).join(''):'<div class="empty-state">The media index could not be reached. No conflict claim is generated locally.</div>';}
 
 const PUBLIC_CAMERAS=[
@@ -475,6 +537,13 @@ Object.assign(I18N.es,{liveTV:'TV en vivo',liveTVKicker:'TV OFICIAL EN VIVO',liv
 Object.assign(I18N.id,{liveTV:'TV Langsung',liveTVKicker:'TV RESMI LANGSUNG',liveTVTitle:'TV langsung dari seluruh dunia',allCountries:'Semua negara',allCameraTypes:'Semua jenis kamera',trafficCameras:'Lalu lintas',volcanoCameras:'Gunung api',weatherCameras:'Cuaca',liveSnapshot:'SNAPSHOT LANGSUNG',officialCameraNetwork:'JARINGAN KAMERA RESMI',allCategories:'Semua kategori',news:'Berita',publicTV:'TV publik',openOfficialTV:'Buka TV resmi',watchHere:'Tonton di sini',officialPage:'Halaman resmi'});
 Object.assign(I18N.pt,{liveTV:'TV ao vivo',liveTVKicker:'TV OFICIAL AO VIVO',liveTVTitle:'TV ao vivo do mundo inteiro',allCountries:'Todos os países',allCameraTypes:'Todos os tipos',trafficCameras:'Trânsito',volcanoCameras:'Vulcão',weatherCameras:'Clima',liveSnapshot:'IMAGEM AO VIVO',officialCameraNetwork:'REDE OFICIAL DE CÂMERAS',allCategories:'Todas as categorias',news:'Notícias',publicTV:'TV pública',openOfficialTV:'Abrir TV oficial',watchHere:'Assistir aqui',officialPage:'Página oficial'});
 
+Object.assign(I18N.en,{mediaLocation:'media-reported location',mediaLocations:'media-reported locations',newsReport:'news report',latestConflictReports:'Recent conflict news reports',conflictGeoNotice:'These map points are locations mentioned near conflict-related terms in recent news coverage. They are not verified strike, battlefield, troop, or evacuation coordinates.',conflictGeoShort:'Media-reported location — not a verified battlefield coordinate.',noConflictLocations:'No conflict-related media locations could be mapped right now.'});
+Object.assign(I18N.th,{mediaLocation:'ตำแหน่งที่สื่อกล่าวถึง',mediaLocations:'ตำแหน่งที่สื่อกล่าวถึง',newsReport:'รายงานข่าว',latestConflictReports:'รายงานข่าวความขัดแย้งล่าสุด',conflictGeoNotice:'จุดบนแผนที่เป็นสถานที่ที่ถูกกล่าวถึงใกล้คำเกี่ยวกับความขัดแย้งในข่าวล่าสุด ไม่ใช่พิกัดยืนยันของจุดโจมตี สนามรบ กำลังทหาร หรือคำสั่งอพยพ',conflictGeoShort:'ตำแหน่งจากรายงานสื่อ — ไม่ใช่พิกัดสนามรบที่ยืนยันแล้ว',noConflictLocations:'ขณะนี้ยังไม่สามารถทำแผนที่ตำแหน่งจากรายงานความขัดแย้งได้'});
+Object.assign(I18N.es,{mediaLocation:'ubicación mencionada por medios',mediaLocations:'ubicaciones mencionadas por medios',newsReport:'noticia',latestConflictReports:'Noticias recientes sobre conflictos',conflictGeoNotice:'Los puntos muestran lugares mencionados cerca de términos de conflicto en noticias recientes; no son coordenadas verificadas de ataques o campos de batalla.',conflictGeoShort:'Ubicación de medios; no es una coordenada de batalla verificada.',noConflictLocations:'No hay ubicaciones de conflicto disponibles ahora.'});
+Object.assign(I18N.id,{mediaLocation:'lokasi yang disebut media',mediaLocations:'lokasi yang disebut media',newsReport:'laporan berita',latestConflictReports:'Laporan konflik terbaru',conflictGeoNotice:'Titik peta adalah lokasi yang disebut dekat istilah konflik dalam berita terbaru, bukan koordinat serangan atau medan perang yang terverifikasi.',conflictGeoShort:'Lokasi dari media, bukan koordinat medan perang terverifikasi.',noConflictLocations:'Belum ada lokasi konflik yang dapat dipetakan.'});
+Object.assign(I18N.pt,{mediaLocation:'local citado pela mídia',mediaLocations:'locais citados pela mídia',newsReport:'notícia',latestConflictReports:'Notícias recentes de conflito',conflictGeoNotice:'Os pontos mostram locais citados perto de termos de conflito em notícias recentes; não são coordenadas verificadas de ataques ou campos de batalha.',conflictGeoShort:'Local citado pela mídia; não é coordenada de batalha verificada.',noConflictLocations:'Nenhum local de conflito disponível agora.'});
+Object.assign(I18N.en,{conflictDisclaimer:'<b>War & Conflict:</b> map points are media-reported locations from GDELT GEO, not verified strike or battlefield coordinates. Follow official government, civil-defense, embassy, or humanitarian security instructions for safety decisions.'});
+Object.assign(I18N.th,{conflictDisclaimer:'<b>สงครามและความขัดแย้ง:</b> จุดบนแผนที่เป็นตำแหน่งที่สื่อกล่าวถึงจาก GDELT GEO ไม่ใช่พิกัดยืนยันของจุดโจมตีหรือสนามรบ โปรดใช้คำแนะนำจากรัฐบาล หน่วยป้องกันภัย สถานทูต หรือองค์กรด้านมนุษยธรรมอย่างเป็นทางการสำหรับการตัดสินใจด้านความปลอดภัย'});
 
 
 let currentLang=loadLocal(STORAGE.lang,null)||((navigator.language||'en').toLowerCase().startsWith('th')?'th':'en');
