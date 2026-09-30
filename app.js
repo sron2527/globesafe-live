@@ -29,6 +29,7 @@ function showView(name){
   if(name==='weather')setTimeout(()=>syncWeatherUI(),40);
   if(name==='radio'&&!state.stations.length)loadRadio();
   if(name==='cameras')renderCameras();
+  if(name==='tv')renderLiveTV();
   if(name==='watchlist')renderWatchlist();
 }
 document.addEventListener('click',e=>{const viewBtn=e.target.closest('[data-view]');if(viewBtn){const filter=viewBtn.dataset.filter;if(filter)state.currentFilter=filter;showView(viewBtn.dataset.view);if(viewBtn.dataset.view==='map')setTimeout(()=>setFilter(state.currentFilter),80);}});
@@ -237,25 +238,92 @@ async function loadConflict(){const url='https://api.gdeltproject.org/api/v2/doc
 function renderConflict(){const el=$('#conflictList'),list=state.conflictReports.slice(0,6);el.innerHTML=list.length?list.map(r=>`<div class="conflict-item"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a><small>${escapeHtml(r.domain||r.sourcecountry||'GDELT')} · media report</small></div>`).join(''):'<div class="empty-state">The media index could not be reached. No conflict claim is generated locally.</div>';}
 
 const PUBLIC_CAMERAS=[
-  {id:'v1',name:'USGS Kīlauea V1cam',region:'Hawaiʻi, USA',desc:'West Halemaʻumaʻu crater — public USGS near-real-time snapshot.',image:'https://volcanoes.usgs.gov/observatories/hvo/cams/V1cam/images/M.jpg',url:'https://www.usgs.gov/volcanoes/kilauea/v1cam-kilauea-volcano-hawaii-west-halemaumau-crater'},
-  {id:'v2',name:'USGS Kīlauea V2cam',region:'Hawaiʻi, USA',desc:'East Halemaʻumaʻu crater — public USGS near-real-time snapshot.',image:'https://volcanoes.usgs.gov/observatories/hvo/cams/V2cam/images/M.jpg',url:'https://www.usgs.gov/media/webcams/v2-kilauea-volcano-hawaii-east-halemaumau-crater'},
-  {id:'directory',name:'USGS Volcano Webcam Directory',region:'United States',desc:'Official USGS public volcano webcam directory.',image:'',url:'https://www.usgs.gov/programs/VHP/volcano-webcams'}
+  {id:'us-v1',country:'US',countryName:'United States',type:'volcano',name:'USGS Kīlauea V1cam',region:'Hawaiʻi, USA',source:'USGS',desc:'West Halemaʻumaʻu crater — public USGS near-real-time snapshot.',image:'https://volcanoes.usgs.gov/observatories/hvo/cams/V1cam/images/M.jpg',url:'https://www.usgs.gov/volcanoes/kilauea/v1cam-kilauea-volcano-hawaii-west-halemaumau-crater'},
+  {id:'us-v2',country:'US',countryName:'United States',type:'volcano',name:'USGS Kīlauea V2cam',region:'Hawaiʻi, USA',source:'USGS',desc:'East Halemaʻumaʻu crater — public USGS near-real-time snapshot.',image:'https://volcanoes.usgs.gov/observatories/hvo/cams/V2cam/images/M.jpg',url:'https://www.usgs.gov/media/webcams/v2-kilauea-volcano-hawaii-east-halemaumau-crater'},
+  {id:'us-dir',country:'US',countryName:'United States',type:'volcano',name:'USGS Volcano Webcam Directory',region:'United States',source:'USGS',desc:'Official USGS public volcano webcam directory.',image:'',url:'https://www.usgs.gov/programs/VHP/volcano-webcams'},
+  {id:'th-doh',country:'TH',countryName:'Thailand',type:'traffic',name:'Department of Highways CCTV',region:'Thailand',source:'กรมทางหลวง / DOH',desc:'Official Department of Highways traffic data and CCTV network.',image:'',url:'https://www.highwaytraffic.go.th/'},
+  {id:'jp-mlit',country:'JP',countryName:'Japan',type:'traffic',name:'MLIT National Live Camera Directory',region:'Japan',source:'MLIT Japan',desc:'Official national road live-camera directory from Japan’s Ministry of Land, Infrastructure, Transport and Tourism.',image:'',url:'https://www.mlit.go.jp/road/bosai/LIVEcamera.html'},
+  {id:'jp-roadinfo',country:'JP',countryName:'Japan',type:'weather',name:'MLIT Road Information System',region:'Japan',source:'MLIT Japan',desc:'Official road cameras, rainfall, snow depth, wind and road weather information.',image:'',url:'https://www.road-info-prvs.mlit.go.jp/roadinfo/pcen/pcTop_00_0.html'},
+  {id:'gb-nh',country:'GB',countryName:'United Kingdom',type:'traffic',name:'National Highways Traffic Cameras',region:'England, UK',source:'National Highways',desc:'Official motorway and trunk-road traffic camera service.',image:'',url:'https://nationalhighways.co.uk/roads-and-travel/live-travel-updates/traffic-cameracctv-services/'},
+  {id:'au-nsw',country:'AU',countryName:'Australia',type:'traffic',name:'Live Traffic NSW Cameras',region:'New South Wales, Australia',source:'Transport for NSW',desc:'Official real-time road conditions, incidents and traffic-camera service.',image:'',url:'https://www.service.nsw.gov.au/transaction/live-traffic-nsw'}
 ];
-let selectedCameraIndex=0;
+let selectedCameraId='us-v1';
 function cameraImageWithBust(url){return url?url+(url.includes('?')?'&':'?')+'t='+Date.now():'';}
-function selectCamera(i){
-  const c=PUBLIC_CAMERAS[i];if(!c||!c.image)return;selectedCameraIndex=i;
-  const img=$('#cameraFeatureImage'),title=$('#cameraFeatureTitle'),meta=$('#cameraFeatureMeta'),link=$('#cameraFeatureLink');
-  if(img){img.src=cameraImageWithBust(c.image);img.onerror=()=>{img.alt=t('cameraUnavailable');};}
-  if(title)title.textContent=c.name;if(meta)meta.textContent='USGS · '+c.region;if(link){link.href=c.url;link.textContent=t('openOfficialCamera')+' →';}
-  $$('#cameraList .camera-card').forEach((el,n)=>el.classList.toggle('active',n===i));
+function filteredCameras(){
+  const country=$('#cameraCountrySelect')?.value||'all';
+  const type=$('#cameraTypeSelect')?.value||'all';
+  return PUBLIC_CAMERAS.filter(c=>(country==='all'||c.country===country)&&(type==='all'||c.type===type));
+}
+function selectCameraById(id){
+  const c=PUBLIC_CAMERAS.find(x=>x.id===id);if(!c)return;selectedCameraId=id;
+  const img=$('#cameraFeatureImage'),directory=$('#cameraFeatureDirectory'),title=$('#cameraFeatureTitle'),meta=$('#cameraFeatureMeta'),link=$('#cameraFeatureLink'),badge=$('#cameraFeatureBadge');
+  if(title)title.textContent=c.name;
+  if(meta)meta.textContent=`${c.source} · ${c.region}`;
+  if(link){link.href=c.url;link.textContent=(c.image?t('openOfficialCamera'):t('openCameraDirectory'))+' →';}
+  if(c.image){
+    if(img){img.hidden=false;img.src=cameraImageWithBust(c.image);img.onerror=()=>{img.alt=t('cameraUnavailable');};}
+    if(directory)directory.hidden=true;
+    if(badge){badge.textContent='● '+t('liveSnapshot');badge.classList.remove('directory');}
+  }else{
+    if(img){img.hidden=true;img.removeAttribute('src');}
+    if(directory){directory.hidden=false;const h=$('#cameraDirectoryTitle');const p=$('#cameraDirectoryDesc');if(h)h.textContent=c.name;if(p)p.textContent=c.desc;}
+    if(badge){badge.textContent='◉ '+t('officialCameraNetwork');badge.classList.add('directory');}
+  }
+  $$('#cameraList .camera-card').forEach(el=>el.classList.toggle('active',el.dataset.cameraId===id));
 }
 function renderCameras(){
   const list=$('#cameraList');if(!list)return;
-  list.innerHTML=PUBLIC_CAMERAS.map((c,i)=>`<div class="camera-card ${c.image?'selectable':''} ${i===selectedCameraIndex?'active':''}" data-camera-index="${i}">${c.image?`<img class="camera-thumb" src="${escapeHtml(cameraImageWithBust(c.image))}" alt="">`:''}<small>${escapeHtml(c.region)}</small><strong>${escapeHtml(c.name)}</strong><p>${escapeHtml(c.desc)}</p><a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${c.image?t('openOfficialCamera'):t('openCameraDirectory')} →</a></div>`).join('');
-  $$('[data-camera-index]',list).forEach(el=>{el.onclick=e=>{if(e.target.closest('a'))return;selectCamera(Number(el.dataset.cameraIndex));};});
-  selectCamera(selectedCameraIndex);
+  const cams=filteredCameras();
+  if(!cams.some(c=>c.id===selectedCameraId))selectedCameraId=cams[0]?.id||'';
+  list.innerHTML=cams.length?cams.map(c=>`<div class="camera-card selectable ${c.id===selectedCameraId?'active':''}" data-camera-id="${escapeHtml(c.id)}">${c.image?`<img class="camera-thumb" src="${escapeHtml(cameraImageWithBust(c.image))}" alt="">`:`<div class="camera-directory-thumb"><span>◉</span><small>${escapeHtml(c.source)}</small></div>`}<div class="camera-card-topline"><small>${escapeHtml(c.countryName)} · ${escapeHtml(c.type)}</small></div><strong>${escapeHtml(c.name)}</strong><p>${escapeHtml(c.desc)}</p><a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${c.image?t('openOfficialCamera'):t('openCameraDirectory')} →</a></div>`).join(''):`<div class="empty-state">${t('noCameraSources')}</div>`;
+  $$('[data-camera-id]',list).forEach(el=>{el.onclick=e=>{if(e.target.closest('a'))return;selectCameraById(el.dataset.cameraId);};});
+  if(selectedCameraId)selectCameraById(selectedCameraId);
 }
+$('#cameraCountrySelect')?.addEventListener('change',renderCameras);
+$('#cameraTypeSelect')?.addEventListener('change',renderCameras);
+
+const LIVE_TV_CHANNELS=[
+  {id:'france24-en',country:'FR',countryName:'France',category:'news',name:'FRANCE 24 English',source:'FRANCE 24',embed:'https://www.youtube-nocookie.com/embed/Ap-UM1O9RBU?rel=0&playsinline=1',url:'https://www.youtube.com/watch?v=Ap-UM1O9RBU'},
+  {id:'dw-news',country:'DE',countryName:'Germany',category:'news',name:'DW News',source:'Deutsche Welle',embed:'https://www.youtube-nocookie.com/embed/tZT2MCYu6Zw?rel=0&playsinline=1',url:'https://www.youtube.com/watch?v=tZT2MCYu6Zw'},
+  {id:'aljazeera-en',country:'QA',countryName:'Qatar',category:'news',name:'Al Jazeera English',source:'Al Jazeera English',embed:'https://www.youtube-nocookie.com/embed/e93MaEwrsfc?rel=0&playsinline=1',url:'https://www.youtube.com/watch?v=e93MaEwrsfc'},
+  {id:'sky-news',country:'GB',countryName:'United Kingdom',category:'news',name:'Sky News',source:'Sky News',embed:'https://www.youtube-nocookie.com/embed/xDWQ3LkccY8?rel=0&playsinline=1',url:'https://www.youtube.com/watch?v=xDWQ3LkccY8'},
+  {id:'thai-pbs',country:'TH',countryName:'Thailand',category:'public',name:'Thai PBS Live',source:'Thai PBS',embed:'',url:'https://www.thaipbs.or.th/live'},
+  {id:'cna',country:'SG',countryName:'Singapore',category:'news',name:'CNA 24/7',source:'Channel NewsAsia',embed:'',url:'https://www.channelnewsasia.com/watch'},
+  {id:'abc-au',country:'AU',countryName:'Australia',category:'public',name:'ABC News Channel',source:'Australian Broadcasting Corporation',embed:'',url:'https://www.abc.net.au/news/newschannel'},
+  {id:'nhk-world',country:'JP',countryName:'Japan',category:'public',name:'NHK WORLD-JAPAN',source:'NHK WORLD-JAPAN',embed:'',url:'https://www3.nhk.or.jp/nhkworld/en/live/'}
+];
+let selectedTVId='france24-en';
+function filteredTVChannels(){
+  const country=$('#tvCountrySelect')?.value||'all';
+  const cat=$('#tvCategorySelect')?.value||'all';
+  return LIVE_TV_CHANNELS.filter(c=>(country==='all'||c.country===country)&&(cat==='all'||c.category===cat));
+}
+function selectTV(id){
+  const c=LIVE_TV_CHANNELS.find(x=>x.id===id);if(!c)return;selectedTVId=id;
+  const frame=$('#tvPlayerFrame'),fallback=$('#tvExternalFallback'),title=$('#tvNowTitle'),meta=$('#tvNowMeta'),fallbackTitle=$('#tvFallbackTitle'),fallbackLink=$('#tvFallbackLink');
+  if(title)title.textContent=c.name;
+  if(meta)meta.textContent=`${c.countryName} · ${c.source}`;
+  if(c.embed){
+    if(frame){frame.hidden=false;if(frame.src!==c.embed)frame.src=c.embed;}
+    if(fallback)fallback.hidden=true;
+  }else{
+    if(frame){frame.hidden=true;frame.removeAttribute('src');}
+    if(fallback)fallback.hidden=false;
+    if(fallbackTitle)fallbackTitle.textContent=c.name;
+    if(fallbackLink)fallbackLink.href=c.url;
+  }
+  $('#tvChannelGrid .tv-channel-card').forEach(el=>el.classList.toggle('active',el.dataset.tvId===id));
+}
+function renderLiveTV(){
+  const grid=$('#tvChannelGrid');if(!grid)return;
+  const channels=filteredTVChannels();
+  if(!channels.some(c=>c.id===selectedTVId))selectedTVId=channels[0]?.id||'';
+  grid.innerHTML=channels.length?channels.map(c=>`<button class="tv-channel-card ${c.id===selectedTVId?'active':''}" data-tv-id="${escapeHtml(c.id)}"><span class="tv-card-flag">${c.country==='TH'?'🇹🇭':c.country==='JP'?'🇯🇵':c.country==='SG'?'🇸🇬':c.country==='AU'?'🇦🇺':c.country==='GB'?'🇬🇧':c.country==='FR'?'🇫🇷':c.country==='DE'?'🇩🇪':c.country==='QA'?'🇶🇦':'🌐'}</span><span><strong>${escapeHtml(c.name)}</strong><small>${escapeHtml(c.countryName)} · ${escapeHtml(c.source)}</small></span><em>${c.embed?t('watchHere'):t('officialPage')}</em></button>`).join(''):`<div class="empty-state">${t('noTVChannels')}</div>`;
+  $('[data-tv-id]',grid).forEach(el=>el.onclick=()=>selectTV(el.dataset.tvId));
+  if(selectedTVId)selectTV(selectedTVId);
+}
+$('#tvCountrySelect')?.addEventListener('change',renderLiveTV);
+$('#tvCategorySelect')?.addEventListener('change',renderLiveTV);
 
 async function loadRadio(){
   const grid=$('#stationGrid');grid.innerHTML='<div class="skeleton-grid"></div>';
@@ -376,6 +444,12 @@ Object.assign(I18N.th,{weatherLive:'สภาพอากาศสด',weatherKi
 Object.assign(I18N.es,{weatherLive:'Tiempo en vivo',weatherKicker:'TIEMPO EN VIVO',weatherTitle:'Radar meteorológico, viento y lluvia',weatherDesc:'Explore capas globales de viento y lluvia/tormentas con el mapa oficial integrado de Windy.',weatherWind:'Viento',weatherRainThunder:'Lluvia y tormentas',weatherUseLocation:'Usar mi ubicación',weatherGlobalView:'Vista global / Sudeste Asiático',weatherNoteTitle:'Nota de la capa meteorológica',weatherNote:'Las visualizaciones meteorológicas son proporcionadas por el servicio Windy integrado.',openWindy:'Abrir Windy.com →',weatherLocationUnavailable:'Ubicación no disponible.',weatherLocating:'Buscando ubicación…',weatherLocationDenied:'Permiso de ubicación denegado.'});
 Object.assign(I18N.id,{weatherLive:'Cuaca Langsung',weatherKicker:'CUACA LANGSUNG',weatherTitle:'Radar cuaca, angin & hujan',weatherDesc:'Jelajahi lapisan angin dan hujan/petir global melalui peta resmi Windy yang disematkan.',weatherWind:'Angin',weatherRainThunder:'Hujan & Petir',weatherUseLocation:'Gunakan lokasi saya',weatherGlobalView:'Tampilan global / Asia Tenggara',weatherNoteTitle:'Catatan lapisan cuaca',weatherNote:'Visualisasi cuaca disediakan oleh layanan Windy yang disematkan.',openWindy:'Buka Windy.com →',weatherLocationUnavailable:'Lokasi tidak tersedia.',weatherLocating:'Mencari lokasi…',weatherLocationDenied:'Izin lokasi ditolak.'});
 Object.assign(I18N.pt,{weatherLive:'Tempo ao vivo',weatherKicker:'TEMPO AO VIVO',weatherTitle:'Radar meteorológico, vento e chuva',weatherDesc:'Explore camadas globais de vento e chuva/trovoadas com o mapa oficial incorporado do Windy.',weatherWind:'Vento',weatherRainThunder:'Chuva e trovoadas',weatherUseLocation:'Usar minha localização',weatherGlobalView:'Visão global / Sudeste Asiático',weatherNoteTitle:'Nota da camada meteorológica',weatherNote:'As visualizações meteorológicas são fornecidas pelo serviço Windy incorporado.',openWindy:'Abrir Windy.com →',weatherLocationUnavailable:'Localização indisponível.',weatherLocating:'Localizando…',weatherLocationDenied:'Permissão de localização negada.'});
+Object.assign(I18N.en,{liveTV:'Live TV',liveTVKicker:'OFFICIAL LIVE TV',liveTVTitle:'Live TV from around the world',liveTVDesc:'Watch selected official public and news broadcasters. GlobeSafe Live only embeds streams published by the broadcaster or links to the broadcaster’s official live page.',allCountries:'All countries',allCameraTypes:'All camera types',trafficCameras:'Traffic',volcanoCameras:'Volcano',weatherCameras:'Weather',liveSnapshot:'LIVE SNAPSHOT',officialCameraNetwork:'OFFICIAL CAMERA NETWORK',noCameraSources:'No verified camera sources in this filter yet.',allCategories:'All categories',news:'News',publicTV:'Public TV',tvExternalDesc:'This broadcaster does not provide a verified embeddable player here. Open its official live page instead.',openOfficialTV:'Open official live TV',tvPolicyNote:'Only official broadcaster streams and official live pages are listed. Availability can vary by country, rights restrictions, or broadcaster settings.',watchHere:'Watch here',officialPage:'Official page',noTVChannels:'No official TV channels in this filter yet.'});
+Object.assign(I18N.th,{liveTV:'ทีวีสด',liveTVKicker:'ทีวีสดจากแหล่งทางการ',liveTVTitle:'ดูทีวีสดจากทั่วโลก',liveTVDesc:'รับชมช่องข่าวและสถานีสาธารณะที่คัดจากแหล่งทางการ GlobeSafe Live จะฝังเฉพาะสตรีมที่สถานีเผยแพร่ให้รับชม หรือพาไปยังหน้าชมสดทางการเท่านั้น',allCountries:'ทุกประเทศ',allCameraTypes:'กล้องทุกประเภท',trafficCameras:'จราจร',volcanoCameras:'ภูเขาไฟ',weatherCameras:'สภาพอากาศ',liveSnapshot:'ภาพสดล่าสุด',officialCameraNetwork:'เครือข่ายกล้องทางการ',noCameraSources:'ยังไม่มีแหล่งกล้องที่ตรวจสอบแล้วในตัวกรองนี้',allCategories:'ทุกหมวด',news:'ข่าว',publicTV:'ทีวีสาธารณะ',tvExternalDesc:'ช่องนี้ยังไม่มีตัวเล่นแบบฝังที่ตรวจสอบได้ กรุณาเปิดหน้าชมสดทางการของสถานี',openOfficialTV:'เปิดทีวีสดจากเว็บไซต์ทางการ',tvPolicyNote:'แสดงเฉพาะสตรีมและหน้าชมสดของสถานีทางการ ความพร้อมใช้งานอาจแตกต่างตามประเทศ ลิขสิทธิ์ หรือการตั้งค่าของสถานี',watchHere:'ดูในเว็บ',officialPage:'เว็บทางการ',noTVChannels:'ยังไม่มีช่องทีวีทางการในตัวกรองนี้'});
+Object.assign(I18N.es,{liveTV:'TV en vivo',liveTVKicker:'TV OFICIAL EN VIVO',liveTVTitle:'TV en vivo de todo el mundo',allCountries:'Todos los países',allCameraTypes:'Todos los tipos',trafficCameras:'Tráfico',volcanoCameras:'Volcán',weatherCameras:'Tiempo',liveSnapshot:'IMAGEN EN VIVO',officialCameraNetwork:'RED OFICIAL DE CÁMARAS',allCategories:'Todas las categorías',news:'Noticias',publicTV:'TV pública',openOfficialTV:'Abrir TV oficial',watchHere:'Ver aquí',officialPage:'Página oficial'});
+Object.assign(I18N.id,{liveTV:'TV Langsung',liveTVKicker:'TV RESMI LANGSUNG',liveTVTitle:'TV langsung dari seluruh dunia',allCountries:'Semua negara',allCameraTypes:'Semua jenis kamera',trafficCameras:'Lalu lintas',volcanoCameras:'Gunung api',weatherCameras:'Cuaca',liveSnapshot:'SNAPSHOT LANGSUNG',officialCameraNetwork:'JARINGAN KAMERA RESMI',allCategories:'Semua kategori',news:'Berita',publicTV:'TV publik',openOfficialTV:'Buka TV resmi',watchHere:'Tonton di sini',officialPage:'Halaman resmi'});
+Object.assign(I18N.pt,{liveTV:'TV ao vivo',liveTVKicker:'TV OFICIAL AO VIVO',liveTVTitle:'TV ao vivo do mundo inteiro',allCountries:'Todos os países',allCameraTypes:'Todos os tipos',trafficCameras:'Trânsito',volcanoCameras:'Vulcão',weatherCameras:'Clima',liveSnapshot:'IMAGEM AO VIVO',officialCameraNetwork:'REDE OFICIAL DE CÂMERAS',allCategories:'Todas as categorias',news:'Notícias',publicTV:'TV pública',openOfficialTV:'Abrir TV oficial',watchHere:'Assistir aqui',officialPage:'Página oficial'});
+
 
 
 let currentLang=loadLocal(STORAGE.lang,null)||((navigator.language||'en').toLowerCase().startsWith('th')?'th':'en');
@@ -431,6 +505,7 @@ $('#refreshEvents').onclick=()=>{loadEvents().catch(console.error);loadConflict(
 
 function safeInit(label,fn){try{fn();}catch(err){console.error('GlobeSafe '+label+' init failed:',err);}}
 safeInit('cameras',renderCameras);
+safeInit('tv',renderLiveTV);
 safeInit('preferences',renderPreferenceCounts);
 safeInit('notifications',renderNotificationState);
 safeInit('language',()=>applyLanguage(currentLang));
@@ -444,4 +519,4 @@ loadConflict().catch(err=>console.error('GlobeSafe conflict feed failed:',err));
 
 setInterval(()=>loadEvents().catch(console.error),5*60*1000);
 setInterval(()=>loadConflict().catch(console.error),15*60*1000);
-setInterval(()=>{try{if($('#view-cameras')?.classList.contains('active'))selectCamera(selectedCameraIndex);}catch(err){console.error(err);}},60000);
+setInterval(()=>{try{if($('#view-cameras')?.classList.contains('active')&&selectedCameraId)selectCameraById(selectedCameraId);}catch(err){console.error(err);}},60000);
