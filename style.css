@@ -654,3 +654,100 @@
   .mobile-bottom-nav button{font-size:7px;padding-left:0;padding-right:0}
   .mbn-icon{font-size:17px}
 }
+
+/* V3.9 — camera directory UX cleanup */
+.camera-feature[hidden]{display:none!important}
+.camera-layout.directory-only{grid-template-columns:1fr}
+.camera-layout.directory-only .camera-list{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.camera-list{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-content:start;
+}
+.directory-source-card{
+  padding:15px;
+  min-height:0;
+  background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.018));
+}
+.directory-source-card:hover{
+  border-color:rgba(57,217,255,.26);
+  background:rgba(57,217,255,.035);
+}
+.directory-source-head{
+  display:flex;
+  gap:11px;
+  align-items:center;
+}
+.directory-source-icon{
+  flex:0 0 auto;
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  color:var(--cyan);
+  background:rgba(57,217,255,.07);
+  border:1px solid rgba(57,217,255,.16);
+  font-size:19px;
+}
+.directory-source-head small{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  margin-bottom:4px;
+  text-transform:capitalize;
+}
+.directory-source-head strong{
+  display:block;
+  font-size:13px;
+  line-height:1.35;
+}
+.directory-source-card p{
+  margin:12px 0;
+  min-height:0;
+}
+.directory-source-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:11px;
+}
+.directory-source-meta span{
+  font-size:8px;
+  color:#8fb2cd;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:4px 7px;
+  background:rgba(255,255,255,.025);
+}
+.directory-open-btn{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:38px;
+  width:100%;
+  padding:8px 10px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:11px;
+  font-weight:800;
+  color:#c8f6ff;
+  background:rgba(57,217,255,.075);
+  border:1px solid rgba(57,217,255,.16);
+}
+.directory-open-btn:hover{background:rgba(57,217,255,.12)}
+.live-camera-card{cursor:pointer}
+.live-camera-card .camera-card-topline small{color:#7df3c2}
+
+@media(max-width:980px){
+  .camera-layout.directory-only .camera-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .camera-layout.directory-only .camera-list{grid-template-columns:1fr}
+  .directory-source-card{padding:13px}
+  .directory-source-icon{width:40px;height:40px}
+  .directory-open-btn{min-height:42px;font-size:11px}
+}
