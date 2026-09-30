@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=37" />
+  <link rel="stylesheet" href="./style.css?v=38" />
 </head>
 <body>
   <div class="app-shell">
@@ -33,6 +33,7 @@
         <button class="nav-btn" data-view="weather" data-i18n="weatherLive">Weather Live</button>
         <button class="nav-btn" data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
         <button class="nav-btn" data-view="cameras" data-i18n="cameras">Cameras</button>
+        <button class="nav-btn" data-view="tv" data-i18n="liveTV">Live TV</button>
         <button class="nav-btn" data-view="radio" data-i18n="worldFM">World FM</button>
         <button class="nav-btn" data-view="about" data-i18n="about">About</button>
       </nav>
@@ -58,6 +59,7 @@
       <button data-view="weather" data-i18n="weatherLive">Weather Live</button>
       <button data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
       <button data-view="cameras" data-i18n="cameras">Cameras</button>
+      <button data-view="tv" data-i18n="liveTV">Live TV</button>
       <button data-view="radio" data-i18n="worldFM">World FM</button>
       <button data-view="about" data-i18n="aboutPolicies">About / Policies</button>
     </div>
@@ -284,12 +286,78 @@
       <section class="view" id="view-cameras">
         <div class="page-head"><div><p class="kicker" data-i18n="publicCameras">PUBLIC CAMERAS</p><h1 data-i18n="cameraDirectory">Nearby camera directory</h1><p data-i18n="cameraPrivacyDesc">GlobeSafe Live only displays public/authorized cameras. Private or access-controlled cameras are never included.</p></div></div>
         <div class="info-banner" data-i18n-html="cameraInfoBanner"><b>LIVE PUBLIC FEEDS:</b> Verified public cameras are shown here. Availability depends on the camera owner and network.</div>
+        <div class="camera-toolbar">
+          <select id="cameraCountrySelect" aria-label="Camera country">
+            <option value="all" data-i18n="allCountries">All countries</option>
+            <option value="TH">🇹🇭 Thailand</option>
+            <option value="JP">🇯🇵 Japan</option>
+            <option value="US">🇺🇸 United States</option>
+            <option value="GB">🇬🇧 United Kingdom</option>
+            <option value="AU">🇦🇺 Australia</option>
+          </select>
+          <select id="cameraTypeSelect" aria-label="Camera type">
+            <option value="all" data-i18n="allCameraTypes">All camera types</option>
+            <option value="traffic" data-i18n="trafficCameras">Traffic</option>
+            <option value="volcano" data-i18n="volcanoCameras">Volcano</option>
+            <option value="weather" data-i18n="weatherCameras">Weather</option>
+          </select>
+        </div>
         <div class="camera-layout">
           <div class="camera-feature">
-            <div class="camera-live-view"><div class="camera-live-top"><span class="camera-live-badge">● LIVE SNAPSHOT</span><strong id="cameraFeatureTitle">USGS Kīlauea V1cam</strong></div><img id="cameraFeatureImage" alt="Public live camera snapshot" /><div class="camera-live-bottom"><span id="cameraFeatureMeta">USGS · Hawaiʻi, USA</span><a id="cameraFeatureLink" class="source-link" target="_blank" rel="noopener">Open official camera →</a></div></div>
+            <div class="camera-live-view"><div class="camera-live-top"><span class="camera-live-badge" id="cameraFeatureBadge">● LIVE SNAPSHOT</span><strong id="cameraFeatureTitle">USGS Kīlauea V1cam</strong></div><img id="cameraFeatureImage" alt="Public live camera snapshot" /><div class="camera-feature-directory" id="cameraFeatureDirectory" hidden><div class="camera-network-icon">◉</div><strong id="cameraDirectoryTitle">Official public camera network</strong><p id="cameraDirectoryDesc">This network does not provide an embeddable snapshot. Open the official source to view available cameras.</p></div><div class="camera-live-bottom"><span id="cameraFeatureMeta">USGS · Hawaiʻi, USA</span><a id="cameraFeatureLink" class="source-link" target="_blank" rel="noopener">Open official camera →</a></div></div>
           </div>
           <div class="camera-list" id="cameraList"></div>
         </div>
+      </section>
+
+
+      <section class="view" id="view-tv">
+        <div class="page-head">
+          <div>
+            <p class="kicker" data-i18n="liveTVKicker">OFFICIAL LIVE TV</p>
+            <h1 data-i18n="liveTVTitle">Live TV from around the world</h1>
+            <p data-i18n="liveTVDesc">Watch selected official public and news broadcasters. GlobeSafe Live only embeds streams published by the broadcaster or links to the broadcaster’s official live page.</p>
+          </div>
+        </div>
+
+        <div class="tv-toolbar">
+          <select id="tvCountrySelect" aria-label="TV country">
+            <option value="all" data-i18n="allCountries">All countries</option>
+            <option value="TH">🇹🇭 Thailand</option>
+            <option value="JP">🇯🇵 Japan</option>
+            <option value="SG">🇸🇬 Singapore</option>
+            <option value="AU">🇦🇺 Australia</option>
+            <option value="GB">🇬🇧 United Kingdom</option>
+            <option value="FR">🇫🇷 France</option>
+            <option value="DE">🇩🇪 Germany</option>
+            <option value="QA">🇶🇦 Qatar</option>
+          </select>
+          <select id="tvCategorySelect" aria-label="TV category">
+            <option value="all" data-i18n="allCategories">All categories</option>
+            <option value="news" data-i18n="news">News</option>
+            <option value="public" data-i18n="publicTV">Public TV</option>
+          </select>
+        </div>
+
+        <div class="tv-player-card">
+          <div class="tv-player-top">
+            <span class="tv-live-badge">● LIVE</span>
+            <div><strong id="tvNowTitle">FRANCE 24 English</strong><small id="tvNowMeta">France · Official live stream</small></div>
+          </div>
+          <div class="tv-frame-wrap" id="tvFrameWrap">
+            <iframe id="tvPlayerFrame" title="Official live TV" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <div class="tv-external-fallback" id="tvExternalFallback" hidden>
+              <div class="tv-big-icon">TV</div>
+              <h3 id="tvFallbackTitle">Official live page</h3>
+              <p data-i18n="tvExternalDesc">This broadcaster does not provide a verified embeddable player here. Open its official live page instead.</p>
+              <a id="tvFallbackLink" class="primary-btn" target="_blank" rel="noopener" data-i18n="openOfficialTV">Open official live TV</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-grid" id="tvChannelGrid"></div>
+
+        <div class="info-banner tv-policy-note" data-i18n="tvPolicyNote">Only official broadcaster streams and official live pages are listed. Availability can vary by country, rights restrictions, or broadcaster settings.</div>
       </section>
 
       <section class="view" id="view-radio">
@@ -333,6 +401,7 @@
       <button data-view="map"><span class="mbn-icon">◎</span><span data-i18n="liveMap">Live Map</span></button>
       <button data-view="weather"><span class="mbn-icon">☁</span><span data-i18n="weatherLive">Weather Live</span></button>
       <button data-view="cameras"><span class="mbn-icon">◉</span><span data-i18n="cameras">Cameras</span></button>
+      <button data-view="tv"><span class="mbn-icon">▣</span><span data-i18n="liveTV">Live TV</span></button>
       <button data-view="radio"><span class="mbn-icon">♪</span><span data-i18n="worldFM">World FM</span></button>
     </nav>
 
@@ -344,6 +413,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=37"></script>
+  <script src="./app.js?v=38"></script>
 </body>
 </html>
