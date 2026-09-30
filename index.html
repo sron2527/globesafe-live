@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=42" />
+  <link rel="stylesheet" href="./style.css?v=43" />
 </head>
 <body>
   <div class="app-shell">
@@ -112,7 +112,7 @@
             <button class="hazard-card" data-filter="storm" data-view="map"><span class="hazard-icon storm">◉</span><div><strong data-i18n="storms">Storms</strong><small>NASA EONET</small></div><b id="count-storm">—</b></button>
             <button class="hazard-card" data-filter="flood" data-view="map"><span class="hazard-icon flood">≋</span><div><strong data-i18n="floods">Floods</strong><small>NASA EONET + GDACS</small></div><b id="count-flood">—</b></button>
             <button class="hazard-card" data-filter="wildfire" data-view="map"><span class="hazard-icon fire">♨</span><div><strong data-i18n="wildfires">Wildfires</strong><small>NASA EONET</small></div><b id="count-wildfire">—</b></button>
-            <button class="hazard-card" data-filter="volcano" data-view="map"><span class="hazard-icon volcano">▲</span><div><strong data-i18n="volcanoes">Volcanoes</strong><small>NASA EONET</small></div><b id="count-volcano">—</b></button>
+            <button class="hazard-card" data-filter="volcano" data-view="map"><span class="hazard-icon volcano">▲</span><div><strong data-i18n="volcanoes">Volcanoes</strong><small>NASA EONET + GDACS</small></div><b id="count-volcano">—</b></button>
             <button class="hazard-card conflict-card" data-filter="conflict" data-view="map"><span class="hazard-icon conflict">⚠</span><div><strong data-i18n="warConflict">War & Conflict</strong><small data-i18n="mediaReportedWatch">Media-reported watch</small></div><b id="count-conflict">—</b></button>
           </div>
         </section>
@@ -189,7 +189,7 @@
           <button class="filter-chip conflict-chip" data-filter="conflict">⚠ <span data-i18n="warConflict">War & Conflict</span></button>
         </div>
         <div class="map-layout">
-          <div class="map-card"><div id="map"></div><div class="map-legend"><span><i class="dot quake-dot"></i>Earthquake</span><span><i class="dot storm-dot"></i>Storm</span><span><i class="dot flood-dot"></i>Flood</span><span><i class="dot fire-dot"></i>Wildfire</span><span><i class="dot volcano-dot"></i>Volcano</span></div></div>
+          <div class="map-card"><div id="map"></div><div class="map-legend"><span><i class="dot quake-dot"></i>Earthquake</span><span><i class="dot storm-dot"></i>Storm</span><span><i class="dot flood-dot"></i>Flood</span><span><i class="dot fire-dot"></i>Wildfire</span><span><i class="dot volcano-dot"></i>Volcano</span><span><i class="dot conflict-media-dot"></i>Conflict media</span></div></div>
           <aside class="map-sidebar">
             <div class="sidebar-head"><b id="filterTitle" data-i18n="latestEventsTitle">Latest events</b><span id="mapEventCount">—</span></div>
             <div class="map-event-list" id="mapEventList"></div>
@@ -413,6 +413,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=42"></script>
+  <script src="./app.js?v=43"></script>
 </body>
 </html>
