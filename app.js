@@ -559,6 +559,7 @@ function applyLanguage(lang){
   renderDailyBrief();
   renderCameras();
   renderLiveTV();
+  if(state.map&&state.currentFilter==='conflict')renderMap();
 }
 $('#languageSelect').onchange=e=>applyLanguage(e.target.value);
 
