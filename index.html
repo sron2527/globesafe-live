@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="description" content="GlobeSafe Live — public global hazard monitoring with live disaster map, conflict watch, public cameras and world radio." />
+  <meta name="robots" content="index,follow" />
+  <title>GlobeSafe Live — Global Disaster Alerts, Cameras & World Radio</title>
+
+  <!-- ADSENSE: paste the Google AdSense site script here after approval. -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-view="home" aria-label="GlobeSafe Live home">
+        <span class="brand-mark"><span class="pulse-dot"></span>GS</span>
+        <span class="brand-copy"><strong>GlobeSafe</strong><em>LIVE</em></span>
+      </button>
+
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <button class="nav-btn active" data-view="home" data-i18n="overview">Overview</button>
+        <button class="nav-btn" data-view="map" data-i18n="liveMap">Live Map</button>
+        <button class="nav-btn" data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
+        <button class="nav-btn" data-view="cameras" data-i18n="cameras">Cameras</button>
+        <button class="nav-btn" data-view="radio" data-i18n="worldFM">World FM</button>
+        <button class="nav-btn" data-view="about" data-i18n="about">About</button>
+      </nav>
+
+      <div class="top-actions">
+        <span class="live-pill"><span></span> <span data-i18n="liveData">LIVE DATA</span></span>
+        <select class="language-select" id="languageSelect" aria-label="Language">
+          <option value="en">🌐 English</option>
+          <option value="th">🇹🇭 ไทย</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="id">🇮🇩 Indonesia</option>
+          <option value="pt">🇧🇷 Português</option>
+        </select>
+        <button class="install-btn" id="installBtn" hidden data-i18n="installApp">Install App</button>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">☾</button>
+        <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+      </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <button data-view="home" data-i18n="overview">Overview</button>
+      <button data-view="map" data-i18n="liveMap">Live Map</button>
+      <button data-view="watchlist" data-i18n="myWatchlist">My Watchlist</button>
+      <button data-view="cameras" data-i18n="cameras">Cameras</button>
+      <button data-view="radio" data-i18n="worldFM">World FM</button>
+      <button data-view="about" data-i18n="aboutPolicies">About / Policies</button>
+    </div>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="hero-wrap">
+          <div class="hero-bg-grid"></div>
+          <div class="hero-orbit orbit-a"></div>
+          <div class="hero-orbit orbit-b"></div>
+          <div class="hero-content">
+            <div class="eyebrow"><span>●</span> <span data-i18n="situational">Global situational awareness</span></div>
+            <h1 data-i18n-html="heroTitle">Know what is happening<br><span>around the world.</span></h1>
+            <p data-i18n="heroDesc">One public dashboard for natural hazards, conflict reports, nearby public cameras and live radio — designed to help people stay informed.</p>
+            <div class="hero-actions">
+              <button class="primary-btn" data-view="map"><span data-i18n="openLiveMap">Open Live Map</span> <span>→</span></button>
+              <button class="secondary-btn" data-view="radio" data-i18n="listenFM">Listen to World FM</button>
+            </div>
+            <div class="hero-meta">
+              <span><b id="statEvents">—</b> active/recent events</span>
+              <span><b id="statQuakes">—</b> earthquakes / 24h</span>
+              <span><b id="lastUpdated">Updating…</b> last refresh</span>
+            </div>
+          </div>
+
+          <div class="globe-visual" id="globeVisual">
+            <div class="globe-caption"><span class="status-dot"></span><b>LIVE 3D GLOBE</b><small data-i18n="globeCaption">live event intensity</small></div>
+            <div id="heroGlobe" aria-label="Rotating 3D world globe with live hazard points"></div>
+            <div class="globe-severity-legend">
+              <span><i class="sev-dot active"></i><span data-i18n="sevActive">Active</span></span>
+              <span><i class="sev-dot moderate"></i><span data-i18n="sevModerate">Moderate</span></span>
+              <span><i class="sev-dot high"></i><span data-i18n="sevHigh">High</span></span>
+              <span><i class="sev-dot critical"></i><span data-i18n="sevCritical">Critical</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="trust-strip">
+          <span>Public data sources</span>
+          <b>USGS</b><b>NASA EONET</b><b>NASA GIBS</b><b>GDELT</b><b>Radio Browser</b><b>OpenFreeMap / OSM</b>
+        </div>
+
+        <section class="section-block compact-top">
+          <div class="section-head">
+            <div><p class="kicker">LIVE STATUS</p><h2>Global hazard overview</h2></div>
+            <button class="text-btn" data-view="map">View full map →</button>
+          </div>
+          <div class="hazard-grid">
+            <button class="hazard-card" data-filter="earthquake" data-view="map"><span class="hazard-icon quake">⌁</span><div><strong>Earthquakes</strong><small>USGS live feed</small></div><b id="count-earthquake">—</b></button>
+            <button class="hazard-card" data-filter="storm" data-view="map"><span class="hazard-icon storm">◉</span><div><strong>Storms</strong><small>NASA EONET</small></div><b id="count-storm">—</b></button>
+            <button class="hazard-card" data-filter="flood" data-view="map"><span class="hazard-icon flood">≋</span><div><strong>Floods</strong><small>NASA EONET</small></div><b id="count-flood">—</b></button>
+            <button class="hazard-card" data-filter="wildfire" data-view="map"><span class="hazard-icon fire">♨</span><div><strong>Wildfires</strong><small>NASA EONET</small></div><b id="count-wildfire">—</b></button>
+            <button class="hazard-card" data-filter="volcano" data-view="map"><span class="hazard-icon volcano">▲</span><div><strong>Volcanoes</strong><small>NASA EONET</small></div><b id="count-volcano">—</b></button>
+            <button class="hazard-card conflict-card" data-filter="conflict" data-view="map"><span class="hazard-icon conflict">⚠</span><div><strong>War & Conflict</strong><small>Media-reported watch</small></div><b id="count-conflict">—</b></button>
+          </div>
+        </section>
+
+        <section class="watch-summary-wrap">
+          <div class="watch-summary">
+            <div>
+              <p class="kicker">VERSION 3 · PERSONAL WATCHLIST</p>
+              <h3>Follow the places that matter to you.</h3>
+              <p>Save favorite countries, track areas by radius and opt in to browser notifications — no account required.</p>
+            </div>
+            <div class="watch-summary-stats">
+              <span><b id="homeWatchAreaCount">0</b> tracked areas</span>
+              <span><b id="homeFavCountryCount">0</b> favorite countries</span>
+              <span><b id="homeFavStationCount">0</b> favorite stations</span>
+              <button class="primary-btn small" data-view="watchlist">Open My Watchlist →</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block daily-brief-section">
+          <div class="section-head">
+            <div><p class="kicker" data-i18n="dailyBriefKicker">DAILY BRIEF</p><h2 data-i18n="dailyBriefTitle">Global situation summary</h2></div>
+            <span class="brief-time" id="dailyBriefTime">—</span>
+          </div>
+          <div class="daily-brief-grid" id="dailyBriefGrid"><div class="skeleton-grid"></div></div>
+        </section>
+
+        <section class="ad-wrap" aria-label="Advertisement placeholder">
+          <span>ADVERTISEMENT</span>
+          <div class="ad-box">Google AdSense placement — add code after site approval</div>
+        </section>
+
+        <section class="section-block two-col">
+          <div>
+            <div class="section-head slim"><div><p class="kicker">LATEST EVENTS</p><h2>What’s happening now</h2></div><button class="refresh-btn" id="refreshEvents">↻ Refresh</button></div>
+            <div class="event-list" id="homeEventList"><div class="skeleton-list"></div></div>
+          </div>
+          <aside class="conflict-watch-panel">
+            <div class="panel-label">CONFLICT WATCH</div>
+            <h3>War & armed-conflict reports</h3>
+            <p class="muted">Recent media reports are shown for situational awareness. They are <b>not official evacuation alerts</b>.</p>
+            <div class="conflict-list" id="conflictList"><div class="skeleton-list"></div></div>
+            <div class="source-note">Future verified event mapping can connect to ACLED through a secure server-side API token.</div>
+          </aside>
+        </section>
+
+        <section class="section-block feature-band">
+          <div class="feature-copy">
+            <p class="kicker">STAY CONNECTED</p>
+            <h2>Listen to radio while monitoring the world.</h2>
+            <p>Explore public internet radio stations by country. Playback starts only when you press play.</p>
+            <button class="primary-btn" data-view="radio">Explore World FM →</button>
+          </div>
+          <div class="radio-art">
+            <div class="radio-wave w1"></div><div class="radio-wave w2"></div><div class="radio-wave w3"></div>
+            <div class="radio-disc">FM</div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-map">
+        <div class="page-head">
+          <div><p class="kicker">GLOBAL LIVE MAP</p><h1 data-i18n="hazardsEvents">Hazards & events</h1><p>Natural-hazard markers use public scientific feeds. Conflict reports are separated from official emergency warnings.</p></div>
+          <div class="map-status"><span class="status-dot"></span><b id="mapUpdated">Syncing…</b></div>
+        </div>
+        <div class="filter-row" id="mapFilters">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="earthquake">⌁ Earthquake</button>
+          <button class="filter-chip" data-filter="storm">◉ Storm</button>
+          <button class="filter-chip" data-filter="flood">≋ Flood</button>
+          <button class="filter-chip" data-filter="wildfire">♨ Wildfire</button>
+          <button class="filter-chip" data-filter="volcano">▲ Volcano</button>
+          <button class="filter-chip conflict-chip" data-filter="conflict">⚠ War & Conflict</button>
+        </div>
+        <div class="map-layout">
+          <div class="map-card"><div id="map"></div><div class="map-legend"><span><i class="dot quake-dot"></i>Earthquake</span><span><i class="dot storm-dot"></i>Storm</span><span><i class="dot flood-dot"></i>Flood</span><span><i class="dot fire-dot"></i>Wildfire</span><span><i class="dot volcano-dot"></i>Volcano</span></div></div>
+          <aside class="map-sidebar">
+            <div class="sidebar-head"><b id="filterTitle">Latest events</b><span id="mapEventCount">—</span></div>
+            <div class="map-event-list" id="mapEventList"></div>
+          </aside>
+        </div>
+        <div class="conflict-disclaimer"><b>War & Conflict:</b> the MVP displays recent media-reported conflict coverage separately. Do not use GlobeSafe Live as a substitute for official government, civil-defense, embassy, or humanitarian security instructions.</div>
+      </section>
+
+      <section class="view" id="view-event">
+        <button class="back-btn" data-view="map">← Back to map</button>
+        <div class="event-detail" id="eventDetail"></div>
+      </section>
+
+      <section class="view" id="view-watchlist">
+        <div class="page-head">
+          <div><p class="kicker">MY WATCHLIST</p><h1 data-i18n="yourPlaces">Your places, your alerts.</h1><p>Preferences stay in this browser. GlobeSafe Live does not require an account.</p></div>
+          <div class="version-pill">VERSION 3</div>
+        </div>
+
+        <div class="watch-layout">
+          <section class="watch-panel notification-panel">
+            <div class="panel-title-row"><div><p class="kicker">BROWSER ALERTS</p><h2>Notifications</h2></div><span class="notify-state" id="notificationState">Not enabled</span></div>
+            <p>When this page is open, GlobeSafe Live can notify you if a newly detected mapped hazard appears inside a tracked area. Browser permission is always optional.</p>
+            <div class="button-row">
+              <button class="primary-btn small" id="enableNotifications">Enable notifications</button>
+              <button class="secondary-btn small" id="testNotification">Send test</button>
+            </div>
+            <small class="fine-print">Notifications normally require HTTPS. Version 3 includes PWA support. Background delivery still depends on a future push-notification server; local browser alerts work while the app is open.</small>
+          </section>
+
+          <section class="watch-panel">
+            <div class="panel-title-row"><div><p class="kicker">FAVORITE COUNTRIES</p><h2>Quick country access</h2></div><b id="favCountryCount">0 saved</b></div>
+            <p>Save countries for one-tap access to their radio directory now, and for future country-level monitoring features.</p>
+            <div class="inline-form">
+              <select id="favoriteCountrySelect" aria-label="Choose favorite country">
+                <option value="US|United States">United States</option><option value="GB|United Kingdom">United Kingdom</option><option value="TH|Thailand">Thailand</option><option value="JP|Japan">Japan</option><option value="KR|South Korea">South Korea</option><option value="ID|Indonesia">Indonesia</option><option value="IN|India">India</option><option value="FR|France">France</option><option value="DE|Germany">Germany</option><option value="BR|Brazil">Brazil</option><option value="AU|Australia">Australia</option><option value="CA|Canada">Canada</option><option value="MX|Mexico">Mexico</option><option value="PH|Philippines">Philippines</option><option value="VN|Vietnam">Vietnam</option><option value="ES|Spain">Spain</option><option value="IT|Italy">Italy</option><option value="TR|Türkiye">Türkiye</option><option value="ZA|South Africa">South Africa</option><option value="NZ|New Zealand">New Zealand</option>
+              </select>
+              <button class="primary-btn small" id="addFavoriteCountry">+ Add country</button>
+            </div>
+            <div class="saved-chip-list" id="favoriteCountryList"></div>
+          </section>
+
+          <section class="watch-panel full-span">
+            <div class="panel-title-row"><div><p class="kicker">TRACK AN AREA</p><h2>Radius monitoring</h2></div><b id="watchAreaCount">0 areas</b></div>
+            <p>Add a location and radius. New mapped earthquakes, storms, floods, wildfires and volcano events are compared against these areas every time live feeds refresh.</p>
+            <div class="area-form">
+              <input id="areaName" placeholder="Area name, e.g. Home / Tokyo" maxlength="40" />
+              <input id="areaLat" type="number" step="any" min="-90" max="90" placeholder="Latitude" />
+              <input id="areaLon" type="number" step="any" min="-180" max="180" placeholder="Longitude" />
+              <select id="areaRadius"><option value="25">25 km</option><option value="50" selected>50 km</option><option value="100">100 km</option><option value="250">250 km</option><option value="500">500 km</option></select>
+              <button class="secondary-btn small" id="useMyLocation">◎ Use my location</button>
+              <button class="primary-btn small" id="addWatchArea">+ Track area</button>
+            </div>
+            <div class="area-message" id="areaMessage"></div>
+            <div class="watch-area-grid" id="watchAreaList"></div>
+          </section>
+
+          <section class="watch-panel full-span">
+            <div class="panel-title-row"><div><p class="kicker">RECENT MATCHES</p><h2>Hazards near tracked areas</h2></div><button class="text-btn" data-view="map">Open live map →</button></div>
+            <div class="watch-match-list" id="watchMatchList"><div class="empty-state">Add a tracked area to see matching events.</div></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-cameras">
+        <div class="page-head"><div><p class="kicker">PUBLIC CAMERAS</p><h1 data-i18n="cameraDirectory">Nearby camera directory</h1><p>GlobeSafe Live only links to public/authorized cameras. Private or access-controlled cameras are never included.</p></div></div>
+        <div class="info-banner"><b>MVP:</b> The camera engine is ready for verified public feeds. Select an event from the map to see any cameras in the local curated registry.</div>
+        <div class="camera-layout">
+          <div class="camera-feature">
+            <div class="camera-placeholder"><div class="camera-scan"></div><span>PUBLIC CAMERA NETWORK</span><b>Verified feeds only</b></div>
+          </div>
+          <div class="camera-list" id="cameraList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-radio">
+        <div class="page-head"><div><p class="kicker">WORLD FM</p><h1 data-i18n="radioWorldTitle">Radio from around the world</h1><p>Choose a country or genre, save favorite stations and listen while keeping GlobeSafe Live open.</p></div></div>
+        <div class="radio-toolbar">
+          <select id="countrySelect" aria-label="Select country">
+            <option value="US">United States</option><option value="GB">United Kingdom</option><option value="TH">Thailand</option><option value="JP">Japan</option><option value="KR">South Korea</option><option value="ID">Indonesia</option><option value="IN">India</option><option value="FR">France</option><option value="DE">Germany</option><option value="BR">Brazil</option><option value="AU">Australia</option><option value="CA">Canada</option><option value="MX">Mexico</option><option value="PH">Philippines</option><option value="VN">Vietnam</option><option value="ES">Spain</option><option value="IT">Italy</option><option value="TR">Türkiye</option><option value="ZA">South Africa</option><option value="NZ">New Zealand</option>
+          </select>
+          <input id="radioSearch" placeholder="Search station name…" />
+          <input id="genreSearch" placeholder="Genre / tag, e.g. jazz, news" />
+          <button class="primary-btn small" id="radioSearchBtn">Search</button>
+          <button class="secondary-btn small" id="favoriteStationsBtn">♡ Favorites</button>
+        </div>
+        <div class="now-playing" id="nowPlaying">
+          <div class="album-fallback">♪</div>
+          <div><small>NOT PLAYING</small><strong>Choose a station below</strong><span>Playback requires your click.</span></div>
+          <audio id="audioPlayer" controls preload="none"></audio>
+        </div>
+        <div class="station-grid" id="stationGrid"><div class="skeleton-grid"></div></div>
+      </section>
+
+      <section class="view" id="view-about">
+        <div class="page-head"><div><p class="kicker">ABOUT GLOBESAFE LIVE</p><h1 data-i18n="aboutTitle">Public information, clearly sourced.</h1><p>GlobeSafe Live is designed as a public-access situational awareness tool. No account is required.</p></div></div>
+        <div class="policy-grid">
+          <article><span>01</span><h3>About</h3><p>We combine public hazard feeds, public media indexes, authorized camera directories and public internet radio into a simple global dashboard.</p></article>
+          <article><span>02</span><h3>Data Sources</h3><p>Earthquakes: USGS. Natural events: NASA EONET. Conflict watch: GDELT media index in the MVP, with an ACLED connector planned for verified event mapping. Radio: Radio Browser. Base map: OpenFreeMap using OpenStreetMap data.</p></article>
+          <article><span>03</span><h3>Privacy</h3><p>The MVP does not require an account. Version 2 stores watch areas, favorite countries and favorite radio stations in your browser local storage. Browser notifications require explicit permission and can be disabled in browser settings.</p></article>
+          <article><span>04</span><h3>Disclaimer</h3><p>This service is informational and may be delayed, incomplete, duplicated or inaccurate. Always follow official local authorities and emergency services for urgent safety decisions.</p></article>
+        </div>
+        <div class="policy-copy">
+          <h2>Advertising & editorial separation</h2>
+          <p>Advertising areas are visually separated from alerts, map controls, emergency information and radio controls. Sponsored content must never be styled as an emergency notice or official safety instruction.</p>
+          <h2>Conflict information</h2>
+          <p>War and conflict reporting can be incomplete, disputed or rapidly changing. GlobeSafe Live labels media-derived reports and does not present them as verified military intelligence, evacuation orders or predictions.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div><strong>GlobeSafe Live</strong><p>Global awareness for everyone.</p></div>
+      <div class="footer-links"><button data-view="about">About</button><button data-view="about">Data Sources</button><button data-view="about">Privacy</button><button data-view="about">Disclaimer</button></div>
+      <small>© <span id="year"></span> GlobeSafe Live. Public information dashboard.</small>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
