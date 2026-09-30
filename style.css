@@ -454,3 +454,203 @@
   .globe-caption{transform:scale(.82)}
   .globe-severity-legend{transform:translateX(-50%) scale(.78)}
 }
+
+/* V3.8 — multi-country cameras + official Live TV */
+.camera-toolbar,.tv-toolbar{
+  max-width:1224px;
+  margin:0 auto 16px;
+  padding:0 28px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.camera-toolbar select,.tv-toolbar select{
+  min-width:210px;
+  border:1px solid var(--line);
+  background:#0d1b2d;
+  color:#fff;
+  border-radius:12px;
+  padding:11px 13px;
+  outline:none;
+}
+.camera-feature-directory{
+  flex:1;
+  min-height:330px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  text-align:center;
+  padding:28px;
+  gap:9px;
+  background:
+    radial-gradient(circle at 50% 40%,rgba(57,217,255,.1),transparent 35%),
+    linear-gradient(135deg,#0d2137,#07111f);
+}
+.camera-feature-directory[hidden]{display:none}
+.camera-network-icon{
+  width:68px;height:68px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid rgba(57,217,255,.25);
+  background:rgba(57,217,255,.07);
+  color:var(--cyan);
+  font-size:28px;
+  box-shadow:0 0 35px rgba(57,217,255,.12);
+}
+.camera-feature-directory strong{font-size:20px}
+.camera-feature-directory p{max-width:520px;color:var(--muted);line-height:1.6;font-size:12px}
+.camera-live-badge.directory{color:#9edcff}
+.camera-directory-thumb{
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:10px;
+  margin-bottom:10px;
+  background:linear-gradient(135deg,#112943,#0b1726);
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:6px;
+  border:1px solid rgba(57,217,255,.09);
+}
+.camera-directory-thumb span{font-size:28px;color:var(--cyan)}
+.camera-directory-thumb small{color:var(--muted);font-size:10px}
+.camera-card-topline{margin-bottom:5px}
+
+.tv-player-card{
+  max-width:1224px;
+  margin:0 auto 18px;
+  padding:0 28px;
+}
+.tv-player-top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:13px 15px;
+  border:1px solid var(--line);
+  border-bottom:0;
+  border-radius:18px 18px 0 0;
+  background:#0b1829;
+}
+.tv-player-top div{min-width:0}
+.tv-player-top strong{display:block}
+.tv-player-top small{display:block;color:var(--muted);margin-top:3px}
+.tv-live-badge{
+  flex:0 0 auto;
+  border:1px solid rgba(255,74,95,.22);
+  background:rgba(255,74,95,.08);
+  color:#ff9aa8;
+  padding:6px 9px;
+  border-radius:999px;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.tv-frame-wrap{
+  position:relative;
+  aspect-ratio:16/9;
+  border:1px solid var(--line);
+  border-radius:0 0 18px 18px;
+  overflow:hidden;
+  background:#050b13;
+}
+.tv-frame-wrap iframe{
+  width:100%;height:100%;border:0;background:#050b13;
+}
+.tv-external-fallback{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  text-align:center;
+  gap:10px;
+  padding:28px;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(63,124,255,.15),transparent 32%),
+    linear-gradient(135deg,#0c1c2f,#06101b);
+}
+.tv-external-fallback[hidden]{display:none}
+.tv-external-fallback h3{margin:0;font-size:25px}
+.tv-external-fallback p{max-width:620px;margin:0 0 8px;color:var(--muted);line-height:1.65}
+.tv-big-icon{
+  width:84px;height:60px;border-radius:15px;
+  display:grid;place-items:center;
+  border:1px solid rgba(57,217,255,.2);
+  color:var(--cyan);
+  background:rgba(57,217,255,.06);
+  font-weight:900;
+  letter-spacing:2px;
+}
+.tv-external-fallback .primary-btn{text-decoration:none;width:auto}
+.tv-grid{
+  max-width:1224px;
+  margin:0 auto 28px;
+  padding:0 28px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.tv-channel-card{
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  border-radius:14px;
+  padding:14px;
+  text-align:left;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  align-items:center;
+}
+.tv-channel-card:hover,.tv-channel-card.active{
+  border-color:rgba(57,217,255,.34);
+  background:rgba(57,217,255,.05);
+}
+.tv-card-flag{font-size:24px}
+.tv-channel-card strong{display:block;font-size:12px;line-height:1.3}
+.tv-channel-card small{display:block;color:var(--muted);font-size:9px;margin-top:4px;line-height:1.3}
+.tv-channel-card em{
+  font-style:normal;
+  font-size:8px;
+  font-weight:800;
+  color:#aeeeff;
+  border:1px solid rgba(57,217,255,.16);
+  padding:5px 7px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.tv-policy-note{margin-bottom:55px}
+
+@media(max-width:1100px){
+  .tv-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:760px){
+  .camera-toolbar,.tv-toolbar{
+    padding:0 14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .camera-toolbar select,.tv-toolbar select{
+    min-width:0;
+    width:100%;
+    font-size:11px;
+  }
+  .tv-player-card{padding:0 14px}
+  .tv-player-top{border-radius:15px 15px 0 0;padding:11px 12px}
+  .tv-frame-wrap{border-radius:0 0 15px 15px}
+  .tv-grid{
+    padding:0 14px;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .tv-channel-card{
+    grid-template-columns:auto 1fr auto;
+    padding:12px;
+  }
+  .tv-external-fallback{padding:20px}
+  .tv-external-fallback h3{font-size:20px}
+  .mobile-bottom-nav{grid-template-columns:repeat(6,1fr)}
+  .mobile-bottom-nav button{font-size:7px;padding-left:0;padding-right:0}
+  .mbn-icon{font-size:17px}
+}
