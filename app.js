@@ -171,7 +171,7 @@ async function loadEvents(){
   $('#mapUpdated').textContent=state.events.length?`Updated ${time}`:'Live feeds unavailable';
   document.body.dataset.liveSources=sourceBits.join(',');
 }
-function renderCounts(){const counts={earthquake:0,storm:0,flood:0,wildfire:0,volcano:0};state.events.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);Object.keys(counts).forEach(k=>{const el=$(`#count-${k}`);if(el)el.textContent=counts[k];});$('#statEvents').textContent=state.events.length;$('#statQuakes').textContent=counts.earthquake;$('#count-conflict').textContent=state.conflictPoints.length||state.conflictReports.length||'LIVE';renderPreferenceCounts();}
+function renderCounts(){const counts={earthquake:0,storm:0,flood:0,wildfire:0,volcano:0};state.events.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);Object.keys(counts).forEach(k=>{const el=$$(`#count-${k}`);if(el)el.textContent=counts[k];});$('#statEvents').textContent=state.events.length;$('#statQuakes').textContent=counts.earthquake;$('#count-conflict').textContent=state.conflictPoints.length||state.conflictReports.length||'LIVE';renderPreferenceCounts();}
 function eventRow(e){const m=typeMeta[e.type]||typeMeta.other;return`<button class="event-row" data-event-id="${escapeHtml(e.id)}"><span class="event-badge ${m.class}">${m.icon}</span><span class="event-main"><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(m.label)} · ${ago(e.time)} · ${escapeHtml(e.source)}</small></span><span class="severity">${e.type==='earthquake'&&Number(e.magnitude)>=5?'SIGNIFICANT':'ACTIVE'}</span></button>`;}
 function renderHomeEvents(){const el=$('#homeEventList'),list=state.events.slice(0,8);el.innerHTML=list.length?list.map(eventRow).join(''):'<div class="empty-state">Live feeds could not be reached. Check your internet connection and refresh.</div>';$$('[data-event-id]',el).forEach(b=>b.onclick=()=>openEvent(b.dataset.eventId));}
 
@@ -227,7 +227,7 @@ function renderMap(){
     const pointCards=state.conflictPoints.length?state.conflictPoints.slice(0,60).map(p=>`<button class="map-event-card conflict-location-card" data-conflict-id="${escapeHtml(p.id)}"><strong>${escapeHtml(p.title)}</strong><small>${t('mediaLocation')} · GDELT GEO · ${escapeHtml(p.coverageWindow||'24h')}</small></button>`).join(''):'<div class="empty-state">${t('noConflictLocations')}</div>';
     const reportCards=state.conflictReports.length?state.conflictReports.slice(0,16).map(r=>`<a class="map-event-card" href="${escapeHtml(r.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(r.title)}</strong><small>${t('newsReport')} · ${escapeHtml(r.domain||r.sourcecountry||'GDELT')}</small></a>`).join(''):'';
     side.innerHTML=`<div class="conflict-map-summary"><b>${state.conflictPoints.length} ${t('mediaLocations')}</b><p>${t('conflictGeoNotice')}</p></div>`+pointCards+(reportCards?`<div class="sidebar-subhead">${t('latestConflictReports')}</div>`+reportCards:'');
-    $('[data-conflict-id]',side).forEach(btn=>btn.onclick=()=>{
+    $$('[data-conflict-id]',side).forEach(btn=>btn.onclick=()=>{
       const p=state.conflictPoints.find(x=>x.id===btn.dataset.conflictId);if(!p)return;
       state.map.flyTo({center:[p.lon,p.lat],zoom:5,essential:true});
       new maplibregl.Popup({closeButton:true}).setLngLat([p.lon,p.lat]).setHTML(`<b>${escapeHtml(p.title)}</b><br><span class="conflict-popup-note">${escapeHtml(t('conflictGeoShort'))}</span>`).addTo(state.map);
