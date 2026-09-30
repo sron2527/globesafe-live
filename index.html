@@ -17,7 +17,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./style.css?v=39" />
+  <link rel="stylesheet" href="./style.css?v=40" />
 </head>
 <body>
   <div class="app-shell">
@@ -110,7 +110,7 @@
           <div class="hazard-grid">
             <button class="hazard-card" data-filter="earthquake" data-view="map"><span class="hazard-icon quake">⌁</span><div><strong data-i18n="earthquakes">Earthquakes</strong><small data-i18n="usgsLiveFeed">USGS live feed</small></div><b id="count-earthquake">—</b></button>
             <button class="hazard-card" data-filter="storm" data-view="map"><span class="hazard-icon storm">◉</span><div><strong data-i18n="storms">Storms</strong><small>NASA EONET</small></div><b id="count-storm">—</b></button>
-            <button class="hazard-card" data-filter="flood" data-view="map"><span class="hazard-icon flood">≋</span><div><strong data-i18n="floods">Floods</strong><small>NASA EONET</small></div><b id="count-flood">—</b></button>
+            <button class="hazard-card" data-filter="flood" data-view="map"><span class="hazard-icon flood">≋</span><div><strong data-i18n="floods">Floods</strong><small>NASA EONET + GDACS</small></div><b id="count-flood">—</b></button>
             <button class="hazard-card" data-filter="wildfire" data-view="map"><span class="hazard-icon fire">♨</span><div><strong data-i18n="wildfires">Wildfires</strong><small>NASA EONET</small></div><b id="count-wildfire">—</b></button>
             <button class="hazard-card" data-filter="volcano" data-view="map"><span class="hazard-icon volcano">▲</span><div><strong data-i18n="volcanoes">Volcanoes</strong><small>NASA EONET</small></div><b id="count-volcano">—</b></button>
             <button class="hazard-card conflict-card" data-filter="conflict" data-view="map"><span class="hazard-icon conflict">⚠</span><div><strong data-i18n="warConflict">War & Conflict</strong><small data-i18n="mediaReportedWatch">Media-reported watch</small></div><b id="count-conflict">—</b></button>
@@ -413,6 +413,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js'"></script>
-  <script src="./app.js?v=39"></script>
+  <script src="./app.js?v=40"></script>
 </body>
 </html>
