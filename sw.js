@@ -1,5 +1,5 @@
-const CACHE='globesafe-live-v4-5-shell';
-const APP_SHELL=['./','./index.html','./style.css?v=45','./app.js?v=45','./manifest.webmanifest'];
+const CACHE='globesafe-live-v4-6-shell';
+const APP_SHELL=['./','./index.html','./style.css?v=45','./app.js?v=45','./community.js?v=46','./manifest.webmanifest'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL).catch(()=>{})).then(()=>self.skipWaiting()));
