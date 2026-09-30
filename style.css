@@ -25,3 +25,20 @@
 @media(max-width:760px){.globe-visual{width:410px;right:-210px;top:42%;opacity:.35}.globe-caption,.globe-severity-legend{display:none}.daily-brief-grid{grid-template-columns:1fr}.brief-card.wide{grid-column:auto;display:flex}.language-select{height:36px;max-width:104px;font-size:10px}.hero-content{max-width:92%;}.hero-content>p{max-width:82%}}
 /* Main-map markers keep hazard-type colors; severity affects pulse/size. */
 .map-marker-earthquake{color:var(--red)}.map-marker-storm{color:var(--purple)}.map-marker-flood{color:var(--cyan)}.map-marker-wildfire{color:var(--orange)}.map-marker-volcano{color:#ff7e66}.map-marker.severity-high span{transform:scale(1.12)}.map-marker.severity-critical span{transform:scale(1.3);box-shadow:0 0 20px currentColor}.map-marker.severity-critical:before{animation-duration:1.05s}
+
+/* V3.2 — larger hero globe and real public camera snapshots */
+@media(min-width:1100px){
+  .hero-content{max-width:700px}
+  .globe-visual{right:1.5vw;width:min(48vw,660px);height:min(48vw,660px);aspect-ratio:auto}
+  .globe-visual #heroGlobe{inset:1.5%}
+  .orbit-a{width:650px;height:650px;right:0}
+  .orbit-b{width:720px;height:390px;right:-2vw}
+}
+.camera-live-view{height:100%;min-height:420px;background:#07111f;display:flex;flex-direction:column;position:relative}
+.camera-live-top,.camera-live-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 15px;background:rgba(7,17,31,.94);z-index:2}
+.camera-live-top{border-bottom:1px solid var(--line)}.camera-live-bottom{border-top:1px solid var(--line);margin-top:auto}
+.camera-live-badge{font-size:10px;font-weight:800;letter-spacing:1px;color:#7df3c2}
+.camera-live-view img{width:100%;min-height:330px;flex:1;object-fit:cover;background:#0b1726}
+.camera-live-bottom span{color:var(--muted);font-size:11px}
+.camera-card.selectable{cursor:pointer;transition:.2s}.camera-card.selectable:hover,.camera-card.selectable.active{border-color:rgba(57,217,255,.35);background:rgba(57,217,255,.05)}
+.camera-card .camera-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#0b1726}
