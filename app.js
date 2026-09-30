@@ -464,6 +464,7 @@ function applyLanguage(lang){
   $$('[data-i18n-placeholder]').forEach(el=>{const v=t(el.dataset.i18nPlaceholder);if(v!=null)el.placeholder=v;});
   renderDailyBrief();
   renderCameras();
+  renderLiveTV();
 }
 $('#languageSelect').onchange=e=>applyLanguage(e.target.value);
 
