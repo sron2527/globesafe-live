@@ -26,6 +26,7 @@ function showView(name){
   $$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
   $('#mobileMenu').classList.remove('open'); window.scrollTo({top:0,behavior:'smooth'});
   if(name==='map')setTimeout(()=>{initMap();renderMap();renderWatchAreasOnMap();state.map?.resize();},80);
+  if(name==='weather')setTimeout(()=>syncWeatherUI(),40);
   if(name==='radio'&&!state.stations.length)loadRadio();
   if(name==='cameras')renderCameras();
   if(name==='watchlist')renderWatchlist();
@@ -292,10 +293,55 @@ pt:{activeRecentEvents:'eventos ativos/recentes',quakes24h:'terremotos / 24 h',l
 };
 Object.keys(EXTRA_I18N).forEach(lang=>Object.assign(I18N[lang],EXTRA_I18N[lang]));
 
+Object.assign(I18N.en,{weatherLive:'Weather Live',weatherKicker:'LIVE WEATHER',weatherTitle:'Weather radar, wind & rain',weatherDesc:'Explore global wind and Rain & Thunder layers with an official Windy embedded map. Use the timeline inside the map to move through forecast hours.',weatherWind:'Wind',weatherRainThunder:'Rain & Thunder',weatherUseLocation:'Use my location',weatherGlobalView:'Global / Southeast Asia view',weatherNoteTitle:'Weather layer note',weatherNote:'Weather visualizations are provided by the embedded Windy service. GlobeSafe Live keeps disaster-event alerts and official-source links separate from forecast graphics.',openWindy:'Open Windy.com →',weatherLocationUnavailable:'Location is not supported by this browser.',weatherLocating:'Finding your location…',weatherLocationDenied:'Location permission was not granted.'});
+Object.assign(I18N.th,{weatherLive:'สภาพอากาศสด',weatherKicker:'สภาพอากาศสด',weatherTitle:'เรดาร์อากาศ ลม ฝน และพายุฝนฟ้าคะนอง',weatherDesc:'ดูการเคลื่อนที่ของลมและชั้นข้อมูลฝน/ฟ้าคะนองทั่วโลกผ่านแผนที่ Windy แบบฝังอย่างเป็นทางการ และใช้แถบเวลาในแผนที่เพื่อดูพยากรณ์ตามช่วงเวลา',weatherWind:'ลม',weatherRainThunder:'ฝนและฟ้าคะนอง',weatherUseLocation:'ใช้ตำแหน่งของฉัน',weatherGlobalView:'มุมมองเอเชียตะวันออกเฉียงใต้',weatherNoteTitle:'หมายเหตุข้อมูลอากาศ',weatherNote:'ภาพสภาพอากาศมาจากบริการ Windy ที่ฝังอยู่ในหน้าเว็บ ส่วนการแจ้งเตือนภัยและลิงก์ข้อมูลทางการของ GlobeSafe Live จะแยกออกจากข้อมูลพยากรณ์อย่างชัดเจน',openWindy:'เปิด Windy.com →',weatherLocationUnavailable:'เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง',weatherLocating:'กำลังหาตำแหน่งของคุณ…',weatherLocationDenied:'ไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง'});
+Object.assign(I18N.es,{weatherLive:'Tiempo en vivo',weatherKicker:'TIEMPO EN VIVO',weatherTitle:'Radar meteorológico, viento y lluvia',weatherDesc:'Explore capas globales de viento y lluvia/tormentas con el mapa oficial integrado de Windy.',weatherWind:'Viento',weatherRainThunder:'Lluvia y tormentas',weatherUseLocation:'Usar mi ubicación',weatherGlobalView:'Vista global / Sudeste Asiático',weatherNoteTitle:'Nota de la capa meteorológica',weatherNote:'Las visualizaciones meteorológicas son proporcionadas por el servicio Windy integrado.',openWindy:'Abrir Windy.com →',weatherLocationUnavailable:'Ubicación no disponible.',weatherLocating:'Buscando ubicación…',weatherLocationDenied:'Permiso de ubicación denegado.'});
+Object.assign(I18N.id,{weatherLive:'Cuaca Langsung',weatherKicker:'CUACA LANGSUNG',weatherTitle:'Radar cuaca, angin & hujan',weatherDesc:'Jelajahi lapisan angin dan hujan/petir global melalui peta resmi Windy yang disematkan.',weatherWind:'Angin',weatherRainThunder:'Hujan & Petir',weatherUseLocation:'Gunakan lokasi saya',weatherGlobalView:'Tampilan global / Asia Tenggara',weatherNoteTitle:'Catatan lapisan cuaca',weatherNote:'Visualisasi cuaca disediakan oleh layanan Windy yang disematkan.',openWindy:'Buka Windy.com →',weatherLocationUnavailable:'Lokasi tidak tersedia.',weatherLocating:'Mencari lokasi…',weatherLocationDenied:'Izin lokasi ditolak.'});
+Object.assign(I18N.pt,{weatherLive:'Tempo ao vivo',weatherKicker:'TEMPO AO VIVO',weatherTitle:'Radar meteorológico, vento e chuva',weatherDesc:'Explore camadas globais de vento e chuva/trovoadas com o mapa oficial incorporado do Windy.',weatherWind:'Vento',weatherRainThunder:'Chuva e trovoadas',weatherUseLocation:'Usar minha localização',weatherGlobalView:'Visão global / Sudeste Asiático',weatherNoteTitle:'Nota da camada meteorológica',weatherNote:'As visualizações meteorológicas são fornecidas pelo serviço Windy incorporado.',openWindy:'Abrir Windy.com →',weatherLocationUnavailable:'Localização indisponível.',weatherLocating:'Localizando…',weatherLocationDenied:'Permissão de localização negada.'});
+
+
 let currentLang=loadLocal(STORAGE.lang,null)||((navigator.language||'en').toLowerCase().startsWith('th')?'th':'en');
 function t(key){return I18N[currentLang]?.[key]||I18N.en[key]||key;}
-function applyLanguage(lang){currentLang=I18N[lang]?lang:'en';saveLocal(STORAGE.lang,currentLang);document.documentElement.lang=currentLang;$('#languageSelect').value=currentLang;$('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v!=null)el.textContent=v;});$('[data-i18n-html]').forEach(el=>{const v=t(el.dataset.i18nHtml);if(v!=null)el.innerHTML=v;});$('[data-i18n-placeholder]').forEach(el=>{const v=t(el.dataset.i18nPlaceholder);if(v!=null)el.placeholder=v;});renderDailyBrief();renderCameras();}
+function applyLanguage(lang){
+  currentLang=I18N[lang]?lang:'en';
+  saveLocal(STORAGE.lang,currentLang);
+  document.documentElement.lang=currentLang;
+  $('#languageSelect').value=currentLang;
+  $$('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v!=null)el.textContent=v;});
+  $$('[data-i18n-html]').forEach(el=>{const v=t(el.dataset.i18nHtml);if(v!=null)el.innerHTML=v;});
+  $$('[data-i18n-placeholder]').forEach(el=>{const v=t(el.dataset.i18nPlaceholder);if(v!=null)el.placeholder=v;});
+  renderDailyBrief();
+  renderCameras();
+}
 $('#languageSelect').onchange=e=>applyLanguage(e.target.value);
+
+let weatherOverlay='rain';
+let weatherLat=13.7563, weatherLon=100.5018, weatherZoom=5;
+function buildWindyUrl(){
+  const q=new URLSearchParams({lat:String(weatherLat),lon:String(weatherLon),zoom:String(weatherZoom),level:'surface',overlay:weatherOverlay,menu:'',message:'true',marker:'',calendar:'now',pressure:'true',type:'map',location:'coordinates',detail:'',detailLat:String(weatherLat),detailLon:String(weatherLon),metricWind:'m/s',metricTemp:'°C',radarRange:'-1'});
+  return 'https://embed.windy.com/embed2.html?'+q.toString();
+}
+function syncWeatherUI(){
+  $('.weather-layer-btn').forEach(b=>b.classList.toggle('active',b.dataset.weatherOverlay===weatherOverlay));
+}
+function setWeatherOverlay(layer){
+  if(!['wind','rain'].includes(layer))return;
+  weatherOverlay=layer;
+  const frame=$('#windyFrame'); if(frame)frame.src=buildWindyUrl();
+  syncWeatherUI();
+}
+$('[data-weather-overlay]').forEach(btn=>btn.onclick=()=>setWeatherOverlay(btn.dataset.weatherOverlay));
+$('#weatherUseLocation')?.addEventListener('click',()=>{
+  const label=$('#weatherLocationLabel');
+  if(!navigator.geolocation){if(label)label.textContent=t('weatherLocationUnavailable');return;}
+  if(label)label.textContent=t('weatherLocating');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    weatherLat=Number(pos.coords.latitude.toFixed(4));weatherLon=Number(pos.coords.longitude.toFixed(4));weatherZoom=7;
+    const frame=$('#windyFrame');if(frame)frame.src=buildWindyUrl();
+    if(label){label.removeAttribute('data-i18n');label.textContent=`${weatherLat.toFixed(2)}, ${weatherLon.toFixed(2)}`;}
+  },()=>{if(label)label.textContent=t('weatherLocationDenied');},{enableHighAccuracy:false,timeout:10000,maximumAge:600000});
+});
+
 
 let deferredInstallPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;$('#installBtn').hidden=false;});
