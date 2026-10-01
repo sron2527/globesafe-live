@@ -153,6 +153,18 @@ dialog{border:0;border-radius:20px;max-width:820px;width:calc(100% - 28px);paddi
   </aside>
  </section>
 
+ <div class="container">
+  <div class="ad-note ad-box" aria-label="โฆษณา">
+   <div class="ad-label">โฆษณา</div>
+   <ins class="adsbygoogle"
+        style="display:block"
+        data-ad-client="ca-pub-2159748672978364"
+        data-ad-slot="3100253668"
+        data-ad-format="auto"
+        data-full-width-responsive="true"></ins>
+  </div>
+ </div>
+
  <section id="how" class="container how">
   <h2>ใช้งาน 3 ขั้นตอน</h2>
   <div class="steps">
@@ -591,7 +603,9 @@ function buildInsight(jobs,p){
 document.addEventListener("DOMContentLoaded",()=>{
  renderSkills();
  loadLatestJobs();
- try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){console.warn("AdSense",e)}
+ document.querySelectorAll("ins.adsbygoogle").forEach(()=>{
+  try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){console.warn("AdSense",e)}
+ });
 });
 </script>
 </body>
