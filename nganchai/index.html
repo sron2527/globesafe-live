@@ -81,7 +81,7 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
     </div>
     <div class="field"><label>ประสบการณ์</label><select id="experience"><option value="0">ยังไม่มี / นักศึกษาจบใหม่</option><option value="1">ประมาณ 1 ปี</option><option value="2">2–3 ปี</option><option value="4">4–6 ปี</option><option value="7">7 ปีขึ้นไป</option></select></div>
     <div class="field"><label>วุฒิ / สายเรียน</label><input id="education" placeholder="เช่น ปวส. คอมธุรกิจ"></div>
-    <div class="field"><label>พื้นที่ที่ต้องการ</label><input id="location" placeholder="เช่น กรุงเทพฯ / Remote"></div>
+    <div class="field"><label>พื้นที่ที่ต้องการ</label><input id="location" value="ประเทศไทย" placeholder="เช่น กรุงเทพฯ / Remote"></div>
     <div class="field"><label>เงินเดือนขั้นต่ำ</label><select id="salary"><option value="0">ไม่กำหนด</option><option value="15000">15,000+</option><option value="20000">20,000+</option><option value="25000">25,000+</option><option value="30000">30,000+</option><option value="40000">40,000+</option></select></div>
    </div>
    <div class="more-grid">
@@ -209,6 +209,15 @@ function parseSalary(v=""){
  const nums=(String(v).replace(/,/g,"").match(/\d{4,6}/g)||[]).map(Number);
  if(!nums.length)return 0; return Math.max(...nums);
 }
+function wantsThailand(p){
+ const loc=normalize(p.location||"");
+ if(/remote|รีโมต|ออนไลน์|worldwide|global|ต่างประเทศ/.test(loc)) return false;
+ return true;
+}
+function isThaiJob(job){
+ const hay=normalize((job.location||"")+" "+(job.source||"")+" "+(job.company||""));
+ return /thailand|ประเทศไทย|bangkok|กรุงเทพ|chiang mai|เชียงใหม่|phuket|ภูเก็ต|chon buri|ชลบุรี|rayong|ระยอง|pattaya|พัทยา|nonthaburi|นนทบุรี|pathum|ปทุม|samut|สมุทร|ayutthaya|อยุธยา|korat|nakhon ratchasima|โคราช|ขอนแก่น|khon kaen|udon|อุดร|ubon|อุบล|songkhla|สงขลา|hat yai|หาดใหญ่|surat|สุราษฎร์|lampang|ลำปาง|lamphun|ลำพูน|phitsanulok|พิษณุโลก|chiang rai|เชียงราย|krabi|กระบี่|trang|ตรัง|chanthaburi|จันทบุรี|trat|ตราด|jooble thailand|thailand feed/.test(hay);
+}
 
 function scoreJob(job,p){
  const hay=normalize([job.title,job.description,job.tags?.join(" "),job.company].join(" "));
@@ -218,15 +227,17 @@ function scoreJob(job,p){
  hit=uniq(hit);
  const baseSkills=uniq(p.skills.map(normalize));
  const direct=baseSkills.filter(s=>hay.includes(s));
- let skillScore = p.skills.length ? Math.min(60, direct.length/p.skills.length*45 + Math.min(15,hit.length*2.2)) : 12;
+ const titleHay=normalize((job.title||"")+" "+(job.tags||[]).join(" "));
+ const titleDirect=baseSkills.filter(s=>titleHay.includes(s));
+ let skillScore = p.skills.length ? Math.min(60, direct.length/p.skills.length*25 + titleDirect.length/p.skills.length*25 + Math.min(10,hit.length*1.5)) : 12;
  let locationScore=6;
  const loc=normalize(p.location);
  const jobLoc=normalize(job.location||"");
  if(loc){
    if(job.remote && /remote|รีโมต|ออนไลน์/.test(loc)) locationScore=12;
    else if(jobLoc.includes(loc)||loc.includes(jobLoc)) locationScore=12;
-   else if(job.remote) locationScore=7;
-   else locationScore=1;
+   else if(job.remote) locationScore=5;
+   else locationScore=0;
  } else locationScore=8;
  let typeScore=6;
  if(p.workType){
@@ -305,7 +316,8 @@ function uniqJobs(arr){
 function renderSources(states){
  const el=document.getElementById("sourceState");
  const useful=states.filter(x=>x[1]>0);
- el.innerHTML=useful.length?useful.map(([n,c])=>`<span class="chip">${esc(n)} ${c}</span>`).join(""):`<span class="chip">ยังไม่มีแหล่งงานตอบกลับ</span>`;
+ const thaiReady=useful.some(([n])=>/thai|jooble/i.test(n));
+ el.innerHTML=(useful.length?useful.map(([n,c])=>`<span class="chip">${esc(n)} ${c}</span>`).join(""):`<span class="chip">ยังไม่มีแหล่งงานตอบกลับ</span>`) + (thaiReady?"":`<span class="chip">งานไทย: รอเชื่อม API</span>`);
 }
 function setStatus(mode,text){
  const b=document.getElementById("statusbar"),d=document.getElementById("statusDot"),t=document.getElementById("statusText");
@@ -317,7 +329,10 @@ async function runMatch(){
  if(!p.skills.length&&!p.interest&&!p.goal){toast("กรอกทักษะหรืองานที่สนใจก่อนครับ");document.getElementById("skillInput").focus();return}
  updateProfile(p);
  const jobs=await loadJobs();
- let ranked=jobs.map(j=>scoreJob(j,p)).filter(j=>j.score>=24).sort((a,b)=>b.score-a.score);
+ const thaiOnly=wantsThailand(p)&&p.workType!=="remote";
+ window.__thaiOnlyMode=thaiOnly;
+ let candidates=thaiOnly?jobs.filter(isThaiJob):jobs;
+ let ranked=candidates.map(j=>scoreJob(j,p)).filter(j=>j.score>=24).sort((a,b)=>b.score-a.score);
  if(CONFIG.aiEndpoint){try{ranked=await aiRerank(p,ranked.slice(0,35))}catch(e){console.warn("AI fallback",e)}}
  ranked=ranked.slice(0,24);
  renderJobs(ranked,p);
@@ -344,7 +359,16 @@ function updateProfile(p){
 function renderJobs(jobs,p){
  const grid=document.getElementById("jobGrid");
  document.getElementById("resultCount").textContent=jobs.length?`พบ ${jobs.length} ตำแหน่งที่นำมาจัดอันดับให้คุณ`:"ยังไม่พบงานที่ตรงพอ ลองเพิ่ม/แก้ทักษะ";
- if(!jobs.length){grid.className="empty";grid.innerHTML="<strong>ยังไม่พบงานที่ตรงพอ</strong>ลองเพิ่มทักษะ เปลี่ยนพื้นที่ หรือไม่กำหนดรูปแบบงาน";return}
+ if(!jobs.length){
+   grid.className="empty";
+   if(window.__thaiOnlyMode){
+     document.getElementById("resultCount").textContent="ยังไม่มีตำแหน่งงานไทยจากแหล่ง API ที่เชื่อมอยู่";
+     grid.innerHTML="<strong>ตอนนี้ยังไม่แสดงงานต่างประเทศปะปนแล้ว</strong>เรากำลังรอเชื่อม Job API ประเทศไทย จึงจะนำงานไทยจริงมาเทียบกับทักษะของคุณโดยตรง";
+   }else{
+     grid.innerHTML="<strong>ยังไม่พบงานที่ตรงพอ</strong>ลองเพิ่มทักษะ เปลี่ยนพื้นที่ หรือไม่กำหนดรูปแบบงาน";
+   }
+   return
+ }
  grid.className="jobs";
  grid.innerHTML=jobs.map((j,i)=>{
   const reason=j.matched.length?`พบคำที่เกี่ยวข้องกับ ${j.matched.slice(0,4).join(", ")}`:"คะแนนมาจากความใกล้เคียงของชื่องาน เงื่อนไข และความสนใจ";
