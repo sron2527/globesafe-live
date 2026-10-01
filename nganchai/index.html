@@ -41,6 +41,10 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdro
 .latest-card{background:#fff;border:1px solid #e0e9f4;border-radius:16px;padding:14px;box-shadow:0 7px 20px rgba(60,102,148,.07);display:flex;flex-direction:column;min-height:235px}
 .latest-card .job-top{margin-bottom:10px}.latest-card .meta{margin:8px 0 10px}.latest-card .reason{margin-top:auto}
 .latest-card .source-pill{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;color:#48617f;background:#f0f5fa;padding:5px 7px;border-radius:999px;margin-top:8px;width:max-content}
+.latest-more-wrap{text-align:center;margin-top:16px}
+.latest-more-btn{border:1px solid #8eb7f6;background:#fff;color:#1768e7;border-radius:999px;padding:10px 22px;font-weight:800;font-size:12px}
+.latest-more-btn:hover{background:#f4f8ff}
+
 .latest-loading{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .latest-skeleton{height:210px;border-radius:16px;background:linear-gradient(90deg,#eef4fa 25%,#f7faff 40%,#eef4fa 65%);background-size:400% 100%;animation:shimmer 1.3s infinite}
 @keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
@@ -121,6 +125,9 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
    <div id="latestJobsGrid" class="latest-loading">
     <div class="latest-skeleton"></div><div class="latest-skeleton"></div><div class="latest-skeleton"></div><div class="latest-skeleton"></div>
    </div>
+   <div id="latestMoreWrap" class="latest-more-wrap" style="display:none">
+    <button class="latest-more-btn" onclick="showMoreLatest()">ดูงานเพิ่มเติม</button>
+   </div>
   </div>
  </section>
 
@@ -156,6 +163,7 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
 <script>
 const CONFIG = {
   apiEndpoint: "https://nganchai-api.vercel.app/api/match",
+  latestEndpoint: "https://nganchai-api.vercel.app/api/latest",
   aiEndpoint: "",
   thaiJobsFeed: "./jobs-th.json",
   remotive: "https://remotive.com/api/remote-jobs?limit=100",
@@ -375,14 +383,19 @@ function setStatus(mode,text){
  b.classList.add("show");d.className="dot"+(mode==="loading"?" loading":"");t.textContent=text;
 }
 
-function renderLatestJobs(jobs){
+let latestVisible=12;
+let latestAllJobs=[];
+function renderLatestJobs(jobs,reset=true){
  const grid=document.getElementById("latestJobsGrid");
+ const more=document.getElementById("latestMoreWrap");
  if(!grid)return;
  const thai=jobs.filter(isThaiJob);
- const display=thai.slice(0,8);
+ if(reset){latestAllJobs=thai;latestVisible=12}
+ const display=latestAllJobs.slice(0,latestVisible);
  if(!display.length){
    grid.className="empty";
    grid.innerHTML="<strong>ยังไม่พบงานไทยจาก Job API ในรอบนี้</strong>ระบบจะไม่เอางานต่างประเทศมาแสดงปะปน กรุณาลองรีเฟรชหรือลองค้นหาด้วยทักษะ/จังหวัด";
+   if(more)more.style.display="none";
    return;
  }
  grid.className="latest-grid";
@@ -401,7 +414,13 @@ function renderLatestJobs(jobs){
    </article>`;
  }).join("");
  window.__latestJobs=display;
+ if(more)more.style.display=latestVisible<latestAllJobs.length?"block":"none";
 }
+function showMoreLatest(){
+ latestVisible+=12;
+ renderLatestJobs(latestAllJobs,false);
+}
+
 function openLatestJob(i){
  const j=(window.__latestJobs||[])[i];if(!j)return;
  const url=validUrl(j.url);
@@ -415,15 +434,20 @@ function openLatestJob(i){
 }
 async function loadLatestJobs(){
  try{
-   const generic={latest:true,skills:[],experience:0,education:"",location:"ประเทศไทย",salary:0,workType:"",interest:"",goal:""};
-   const result=await fetchBackendMatch(generic);
-   const thai=(result.jobs||[]).filter(isThaiJob);
-   const display=thai.length?thai:(result.jobs||[]);
-   renderLatestJobs(display);
-   renderBackendSources(result.sources,result.aiUsed);
+   const r=await fetch(CONFIG.latestEndpoint,{headers:{"Accept":"application/json"}});
+   if(!r.ok)throw new Error("Latest API "+r.status);
+   const result=await r.json();
+   renderLatestJobs(result.jobs||[]);
+   const el=document.getElementById("sourceState");
+   if(el){
+     const total=Number(result.count)||0;
+     el.innerHTML=`<span class="chip">Jooble Thailand ${total}</span><span class="chip">แคชงานสาธารณะ 24 ชม.</span>`;
+   }
  }catch(e){
    console.warn("Latest backend error",e);
    const grid=document.getElementById("latestJobsGrid");
+   const more=document.getElementById("latestMoreWrap");
+   if(more)more.style.display="none";
    if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานไทยล่าสุดไม่สำเร็จ</strong>ระบบไม่แสดงงานต่างประเทศแทน กรุณาลองใหม่อีกครั้งภายหลัง";}
  }
 }
