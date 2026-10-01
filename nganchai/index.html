@@ -31,6 +31,19 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdro
 .form-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px}.field{background:#fff;border:1px solid #dfe9f5;border-radius:14px;padding:10px 12px}.field label{display:block;font-size:11px;font-weight:800;color:#35506f;margin-bottom:5px}.field input,.field select{width:100%;border:0;outline:0;background:transparent;color:#4f6280;font-size:13px}.skillbox{display:flex;gap:6px}.skillbox button{border:0;background:#edf5ff;color:#2868ce;border-radius:9px;font-weight:800;padding:5px 10px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{border:0;background:#eaf3ff;color:#33577f;border-radius:999px;padding:5px 9px;font-size:11px}.chip .x{opacity:.55;margin-left:3px}
 .more-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}.search-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}.search-note{font-size:10.5px;color:#8390a5;line-height:1.5}.search-btn{border:0;border-radius:14px;padding:13px 22px;color:#fff;font-weight:800;background:linear-gradient(100deg,#216cf1,#10c59d);min-width:230px}
 .statusbar{display:none;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-radius:12px;background:#f5f9fd;color:#526a87;font-size:11px}.statusbar.show{display:flex}.dot{width:8px;height:8px;border-radius:50%;background:#20b489;box-shadow:0 0 0 4px rgba(32,180,137,.12)}.dot.loading{background:#2a7bea;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.4}}
+
+.latest-section{padding-top:24px}
+.latest-shell{background:rgba(255,255,255,.72);border:1px solid #e3edf7;border-radius:20px;padding:18px;box-shadow:0 10px 30px rgba(52,96,143,.06)}
+.latest-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.latest-title h2{margin:0;font-size:21px}.latest-title p{margin:2px 0 0;font-size:11px;color:#8190a6}
+.latest-badge{font-size:10px;font-weight:800;color:#0a8e70;background:#e7f9f3;border:1px solid #cdeee4;padding:6px 9px;border-radius:999px;white-space:nowrap}
+.latest-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.latest-card{background:#fff;border:1px solid #e0e9f4;border-radius:16px;padding:14px;box-shadow:0 7px 20px rgba(60,102,148,.07);display:flex;flex-direction:column;min-height:235px}
+.latest-card .job-top{margin-bottom:10px}.latest-card .meta{margin:8px 0 10px}.latest-card .reason{margin-top:auto}
+.latest-card .source-pill{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;color:#48617f;background:#f0f5fa;padding:5px 7px;border-radius:999px;margin-top:8px;width:max-content}
+.latest-loading{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.latest-skeleton{height:210px;border-radius:16px;background:linear-gradient(90deg,#eef4fa 25%,#f7faff 40%,#eef4fa 65%);background-size:400% 100%;animation:shimmer 1.3s infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
 .main-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;padding-top:24px}.head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.head h2{margin:0;font-size:21px}.head small{color:#8090a8}.source-note{font-size:10.5px;color:#7c8ca5}
 .jobs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.job{background:#fff;border:1px solid #e0e9f4;border-radius:17px;padding:16px;box-shadow:0 8px 24px rgba(60,102,148,.08);display:flex;flex-direction:column;min-height:320px}.job-top{display:flex;gap:10px;align-items:flex-start}.logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#0e346d,#2781ec);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}.job h3{font-size:14px;margin:0 0 2px;line-height:1.35}.company{font-size:11px;color:#75869e}.score{margin-left:auto;white-space:nowrap;border-radius:999px;background:#def8ef;color:#0b9a75;padding:5px 8px;font-size:10px;font-weight:800}.meta{display:grid;gap:5px;color:#5d708c;font-size:11px;margin:14px 0}.skill-tags{display:flex;flex-wrap:wrap;gap:5px}.skill-tags span{background:#edf4fd;color:#3a5c81;border-radius:999px;padding:5px 7px;font-size:10px}.reason{font-size:10.5px;color:#73839b;line-height:1.5;margin:12px 0 auto}.job-actions{display:flex;gap:8px;margin-top:13px}.outline{flex:1;border:1px solid #82b0f5;background:#fff;color:#1c68dc;border-radius:999px;padding:8px 10px;font-size:11px;font-weight:800}.source{border:0;background:#f0f5fa;color:#4c6584;border-radius:10px;padding:8px 10px;font-size:10px;font-weight:700}
 .sidebar{display:grid;gap:12px;align-content:start}.card{background:#fff;border:1px solid #e0eaf5;border-radius:17px;padding:15px;box-shadow:0 8px 22px rgba(60,102,148,.07)}.card h3{margin:0 0 9px;font-size:16px}.card p{font-size:11px;line-height:1.65;color:#6f819c;margin:5px 0}.profile-list{display:grid;gap:8px}.kv{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #edf2f7;padding-top:8px;font-size:11px}.kv b{color:#355577}.insight{background:linear-gradient(135deg,#fff9f6,#fff);border-color:#f2e0d9}.insight h3{color:#d45d4b}.warning{font-size:10px;color:#8a6a47;background:#fff8e9;border:1px solid #f3dfb6;border-radius:10px;padding:8px 10px;margin-top:8px}
@@ -40,8 +53,8 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdro
 footer{margin-top:34px;background:#fff;border-top:1px solid #e2ebf4}footer .container{min-height:72px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;font-size:11px;color:#7d8ca4}footer b{color:var(--navy)}.link{color:#1b6ddb;font-weight:700}
 dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);padding:0;box-shadow:0 28px 80px rgba(20,55,95,.28)}dialog::backdrop{background:rgba(12,38,73,.5);backdrop-filter:blur(3px)}.modal{padding:26px;position:relative}.close{position:absolute;right:12px;top:10px;width:34px;height:34px;border-radius:50%;border:0;background:#eff4f9;font-size:20px}.modal h2{margin:0 40px 12px 0}.modal h3{font-size:14px;margin:18px 0 5px}.modal p,.modal li{font-size:12px;line-height:1.7;color:#61738f}.modal .actions{display:flex;gap:10px;margin-top:18px}.modal .actions a{flex:1;text-align:center;padding:11px;border-radius:12px;background:linear-gradient(100deg,#216cf1,#10c59d);color:#fff;font-weight:800;font-size:12px}
 .toast{position:fixed;z-index:100;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;background:#102d58;color:#fff;padding:10px 15px;border-radius:999px;font-size:11px;transition:.2s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:1120px){.navlinks{display:none}.hero-grid{grid-template-columns:58% 42%}.hero h1{font-size:44px}.jobs{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:2fr 1fr 1fr}.more-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:820px){.container{padding:0 15px}.nav{height:64px}.brand{min-width:auto}.brand small{display:none}.brand strong{font-size:23px}.pill-btn{display:none}.hero-grid{display:block;position:relative;min-height:500px}.hero-copy{padding:35px 0 215px}.hero h1{font-size:36px}.hero p{font-size:15px}.hero-photo{position:absolute;right:0;bottom:0;width:62%;height:205px;border-radius:25px 0 0 0;background-position:42% 47%}.float{display:none}.search-wrap{margin-top:-18px}.form-grid,.more-grid{grid-template-columns:1fr}.search-row{align-items:stretch;flex-direction:column}.search-btn{width:100%}.main-grid{display:block}.jobs{grid-template-columns:1fr}.sidebar{margin-top:14px}.steps{grid-template-columns:1fr}.privacy-strip{align-items:flex-start;flex-wrap:wrap}.privacy-strip button{margin-left:0}}
+@media(max-width:1120px){.latest-grid,.latest-loading{grid-template-columns:repeat(2,1fr)}.navlinks{display:none}.hero-grid{grid-template-columns:58% 42%}.hero h1{font-size:44px}.jobs{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:2fr 1fr 1fr}.more-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:820px){.latest-grid,.latest-loading{grid-template-columns:1fr}.container{padding:0 15px}.nav{height:64px}.brand{min-width:auto}.brand small{display:none}.brand strong{font-size:23px}.pill-btn{display:none}.hero-grid{display:block;position:relative;min-height:500px}.hero-copy{padding:35px 0 215px}.hero h1{font-size:36px}.hero p{font-size:15px}.hero-photo{position:absolute;right:0;bottom:0;width:62%;height:205px;border-radius:25px 0 0 0;background-position:42% 47%}.float{display:none}.search-wrap{margin-top:-18px}.form-grid,.more-grid{grid-template-columns:1fr}.search-row{align-items:stretch;flex-direction:column}.search-btn{width:100%}.main-grid{display:block}.jobs{grid-template-columns:1fr}.sidebar{margin-top:14px}.steps{grid-template-columns:1fr}.privacy-strip{align-items:flex-start;flex-wrap:wrap}.privacy-strip button{margin-left:0}}
 </style>
 </head>
 <body>
@@ -98,6 +111,18 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
  </section>
 
  <div class="container"><div class="ad-note">พื้นที่โฆษณา Google AdSense (จะแสดงเมื่อมี Ad Unit สำหรับงานใช่)</div></div>
+
+ <section class="container latest-section" id="latestJobs">
+  <div class="latest-shell">
+   <div class="latest-title">
+    <div><h2>งานล่าสุดที่เปิดรับ</h2><p>ดูตำแหน่งงานจริงจากแหล่งที่เชื่อมต่อได้ทันที โดยยังไม่ต้องกรอกข้อมูล</p></div>
+    <span class="latest-badge">อัปเดตจากแหล่งงานจริง</span>
+   </div>
+   <div id="latestJobsGrid" class="latest-loading">
+    <div class="latest-skeleton"></div><div class="latest-skeleton"></div><div class="latest-skeleton"></div><div class="latest-skeleton"></div>
+   </div>
+  </div>
+ </section>
 
  <section class="container main-grid" id="results">
   <div>
@@ -324,6 +349,56 @@ function setStatus(mode,text){
  b.classList.add("show");d.className="dot"+(mode==="loading"?" loading":"");t.textContent=text;
 }
 
+function renderLatestJobs(jobs){
+ const grid=document.getElementById("latestJobsGrid");
+ if(!grid)return;
+ const thai=jobs.filter(isThaiJob);
+ const remote=jobs.filter(j=>j.remote&&!isThaiJob(j));
+ const other=jobs.filter(j=>!j.remote&&!isThaiJob(j));
+ const display=[...thai,...remote,...other].slice(0,8);
+ if(!display.length){
+   grid.className="empty";
+   grid.innerHTML="<strong>กำลังรอแหล่งงานตอบกลับ</strong>เมื่อเชื่อม Job API ประเทศไทยแล้ว งานไทยล่าสุดจะมาแสดงตรงนี้อัตโนมัติ";
+   return;
+ }
+ grid.className="latest-grid";
+ grid.innerHTML=display.map((j,i)=>{
+   const label=isThaiJob(j)?"งานในประเทศไทย":(j.remote?"Remote / ต่างประเทศ":"ต่างประเทศ");
+   return `<article class="latest-card">
+    <div class="job-top">
+      <div class="logo">${esc((j.company||j.title||"?").trim().slice(0,2).toUpperCase())}</div>
+      <div style="min-width:0"><h3>${esc(j.title)}</h3><div class="company">${esc(j.company||"ไม่ระบุบริษัท")}</div></div>
+    </div>
+    <div class="meta"><span>📍 ${esc(j.location||"ไม่ระบุ")}</span><span>💼 ${esc(j.type||(j.remote?"Remote":"ไม่ระบุ"))}</span>${j.salary?`<span>💰 ${esc(j.salary)}</span>`:""}</div>
+    <div class="skill-tags">${(j.tags||[]).slice(0,3).map(t=>`<span>${esc(t)}</span>`).join("")}</div>
+    <div class="reason">ตำแหน่งล่าสุดจากแหล่งงาน • ยังไม่ได้คำนวณความเหมาะสมกับคุณ</div>
+    <span class="source-pill">${esc(label)} • ${esc(j.source)}</span>
+    <div class="job-actions"><button class="outline" onclick="openLatestJob(${i})">ดูรายละเอียด</button><button class="source" onclick="goSource('${esc(validUrl(j.url))}')">ต้นทาง ↗</button></div>
+   </article>`;
+ }).join("");
+ window.__latestJobs=display;
+}
+function openLatestJob(i){
+ const j=(window.__latestJobs||[])[i];if(!j)return;
+ const url=validUrl(j.url);
+ document.getElementById("jobModal").innerHTML=`<button class="close" onclick="jobDialog.close()">×</button>
+  <h2>${esc(j.title)}</h2><p><b>${esc(j.company||"ไม่ระบุบริษัท")}</b> • ${esc(j.location||"ไม่ระบุ")}</p>
+  <div class="chips">${(j.tags||[]).slice(0,8).map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
+  <h3>รายละเอียดจากแหล่งงาน</h3><p>${esc((j.description||"ไม่มีรายละเอียด").slice(0,2200))}</p>
+  <p><b>หมายเหตุ:</b> ตำแหน่งนี้อยู่ในหมวดงานล่าสุด ยังไม่ได้คำนวณ Match Score จนกว่าคุณจะกรอกทักษะและกดจับคู่งาน</p>
+  <div class="actions">${url!=="#"?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">ไปประกาศต้นทาง ↗</a>`:""}</div>`;
+ document.getElementById("jobDialog").showModal();
+}
+async function loadLatestJobs(){
+ try{
+   const jobs=await loadJobs();
+   renderLatestJobs(jobs);
+ }catch(e){
+   const grid=document.getElementById("latestJobsGrid");
+   if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานล่าสุดไม่สำเร็จ</strong>ลองรีเฟรชหน้าอีกครั้ง หรือลองใหม่ภายหลัง";}
+ }
+}
+
 async function runMatch(){
  const p=getProfile();lastProfile=p;
  if(!p.skills.length&&!p.interest&&!p.goal){toast("กรอกทักษะหรืองานที่สนใจก่อนครับ");document.getElementById("skillInput").focus();return}
@@ -404,7 +479,7 @@ function buildInsight(jobs,p){
  document.getElementById("insightText").textContent=`งานคะแนนสูงสุดตอนนี้คือ "${top.title}" (${top.score}%). ${common.length?"คำ/ทักษะที่พบบ่อยในกลุ่มงานคะแนนสูง: "+common.join(", "):"ลองเพิ่มทักษะเฉพาะทางเพื่อให้ระบบแยกงานได้แม่นขึ้น"}`;
 }
 
-document.addEventListener("DOMContentLoaded",()=>{renderSkills()});
+document.addEventListener("DOMContentLoaded",()=>{renderSkills();loadLatestJobs()});
 </script>
 </body>
 </html>
