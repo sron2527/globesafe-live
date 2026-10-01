@@ -1,5 +1,5 @@
 const ORIGINS=new Set((process.env.ALLOWED_ORIGINS||"https://sron2527.github.io").split(",").map(s=>s.trim()).filter(Boolean));
-const KEYWORDS=["พนักงาน","เจ้าหน้าที่","บัญชี","การตลาด","ไอที"];
+const KEYWORDS=["admin","accounting","sales","marketing","customer service","warehouse","IT","engineer","production","part time"];
 function cors(req,res){
   const o=req.headers.origin;
   if(o&&ORIGINS.has(o)){res.setHeader("Access-Control-Allow-Origin",o);res.setHeader("Vary","Origin")}
@@ -40,7 +40,7 @@ function thaiOnly(j){
 async function search(keyword){
   const key=process.env.JOOBLE_API_KEY;
   if(!(key&&process.env.JOOBLE_ENABLED==="true"))return [];
-  const body={keywords:keyword,location:"ประเทศไทย",radius:"80",page:1,ResultOnPage:20,companysearch:false};
+  const body={keywords:keyword,location:"Thailand",radius:"80",page:1,ResultOnPage:25,companysearch:false};
   const d=await json("https://th.jooble.org/api/"+encodeURIComponent(key),{
     method:"POST",
     headers:{"Content-Type":"application/json","Accept":"application/json"},
@@ -53,8 +53,8 @@ export default async function handler(req,res){
   if(req.method==="OPTIONS")return res.status(204).end();
   if(req.method!=="GET")return res.status(405).json({error:"Method not allowed"});
   if(!(process.env.JOOBLE_API_KEY&&process.env.JOOBLE_ENABLED==="true"))return res.status(503).json({error:"Jooble not configured"});
-  res.setHeader("Cache-Control","public, max-age=0, s-maxage=86400, stale-while-revalidate=86400");
-  res.setHeader("Vercel-CDN-Cache-Control","public, s-maxage=86400, stale-while-revalidate=86400");
+  res.setHeader("Cache-Control","public, max-age=0, s-maxage=604800, stale-while-revalidate=86400");
+  res.setHeader("Vercel-CDN-Cache-Control","public, s-maxage=604800, stale-while-revalidate=86400");
   try{
     const results=await Promise.allSettled(KEYWORDS.map(search));
     const all=[];
@@ -66,7 +66,7 @@ export default async function handler(req,res){
       }
     });
     const jobs=dedupe(all).filter(thaiOnly).slice(0,40);
-    return res.status(200).json({ok:true,privacyMode:"public-jobs-cache",cachedForSeconds:86400,categories,count:jobs.length,jobs});
+    return res.status(200).json({ok:true,privacyMode:"public-jobs-cache",cachedForSeconds:604800,categories,count:jobs.length,jobs});
   }catch{
     return res.status(502).json({error:"โหลดงานไทยล่าสุดไม่สำเร็จ"})
   }
