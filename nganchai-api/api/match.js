@@ -11,13 +11,16 @@ function norm(v=""){return clean(v,5000).toLowerCase().normalize("NFKD").replace
 function strip(v=""){return String(v).replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&").replace(/\s+/g," ").trim()}
 function profileOf(b={}){
   const skills=Array.isArray(b.skills)?[...new Set(b.skills.map(x=>clean(x,60)).filter(Boolean))].slice(0,20):[];
-  return {skills,experience:Math.max(0,Math.min(50,Number(b.experience)||0)),education:clean(b.education,120),location:clean(b.location,120),salary:Math.max(0,Math.min(1000000,Number(b.salary)||0)),workType:clean(b.workType,40),interest:clean(b.interest,120),goal:clean(b.goal,120)};
+  return {skills,experience:Math.max(0,Math.min(50,Number(b.experience)||0)),education:clean(b.education,120),location:clean(b.location,120),salary:Math.max(0,Math.min(1000000,Number(b.salary)||0)),workType:clean(b.workType,40),interest:clean(b.interest,120),goal:clean(b.goal,120),latest:Boolean(b.latest)};
 }
 async function json(url,opt={},ms=9000){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
   try{const r=await fetch(url,{...opt,signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}
 }
-function q(p){return clean([...p.skills.slice(0,8),p.interest,p.goal,p.education].filter(Boolean).join(", "),220)}
+function q(p){
+  if(p.latest) return "พนักงาน, เจ้าหน้าที่, ธุรการ, บัญชี, การตลาด, ฝ่ายขาย, ไอที, คลังสินค้า, บริการลูกค้า";
+  return clean([...p.skills.slice(0,8),p.interest,p.goal,p.education].filter(Boolean).join(", "),220)
+}
 function salary(v=""){const a=String(v).replace(/,/g,"").match(/\d{4,7}/g)?.map(Number)||[];return a.length?Math.max(...a):0}
 function dedupe(a){const s=new Set();return a.filter(j=>{const k=norm(j.title+"|"+j.company+"|"+j.location);if(!k||s.has(k))return false;s.add(k);return true})}
 function wantsThailand(p){
@@ -70,15 +73,17 @@ export default async function handler(req,res){
   cors(req,res);if(req.method==="OPTIONS")return res.status(204).end();if(req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
   res.setHeader("Cache-Control","no-store");
   try{
-    const p=profileOf(req.body||{});if(!p.skills.length&&!p.interest&&!p.goal)return res.status(400).json({error:"กรุณาระบุทักษะ งานที่สนใจ หรือสิ่งที่อยากทำ"});
+    const p=profileOf(req.body||{});if(!p.latest&&!p.skills.length&&!p.interest&&!p.goal)return res.status(400).json({error:"กรุณาระบุทักษะ งานที่สนใจ หรือสิ่งที่อยากทำ"});
     const thaiMode=wantsThailand(p) && p.workType!=="remote";
-    const rr=await Promise.allSettled([jooble(p),remotive(p),arbeit()]),names=["Jooble Thailand","Remotive","Arbeitnow"],all=[],sources=[];
+    const providers=p.latest?[jooble(p)]:[jooble(p),remotive(p),arbeit()];
+    const names=p.latest?["Jooble Thailand"]:["Jooble Thailand","Remotive","Arbeitnow"];
+    const rr=await Promise.allSettled(providers),all=[],sources=[];
     rr.forEach((r,i)=>{if(r.status==="fulfilled"&&r.value.length){
       const vals=thaiMode ? r.value.filter(isThaiJob) : r.value;
       if(vals.length){all.push(...vals);sources.push({name:names[i],count:vals.length})}
     }});
     let ranked=dedupe(all).map(j=>score(j,p)).sort((a,b)=>b.score-a.score).slice(0,35),aiUsed=false;
-    try{const a=await aiRank(p,ranked);if(a){ranked=a;aiUsed=true}}catch{}
+    if(!p.latest){try{const a=await aiRank(p,ranked);if(a){ranked=a;aiUsed=true}}catch{}}
     return res.status(200).json({ok:true,privacyMode:"stateless",aiUsed,sources,count:ranked.length,jobs:ranked.slice(0,24)});
   }catch{return res.status(502).json({error:"ไม่สามารถดึงหรือจับคู่งานได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง"})}
 }
