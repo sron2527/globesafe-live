@@ -155,6 +155,7 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
 
 <script>
 const CONFIG = {
+  apiEndpoint: "https://nganchai-api.vercel.app/api/match",
   aiEndpoint: "",
   thaiJobsFeed: "./jobs-th.json",
   remotive: "https://remotive.com/api/remote-jobs?limit=100",
@@ -320,6 +321,31 @@ function mapThaiFeed(data){
  }));
 }
 
+async function fetchBackendMatch(profile){
+ const r=await fetch(CONFIG.apiEndpoint,{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(profile)
+ });
+ if(!r.ok){
+   let detail="";
+   try{detail=(await r.json())?.error||""}catch{}
+   throw new Error(detail||("API "+r.status));
+ }
+ const data=await r.json();
+ const jobs=(data?.jobs||[]).map(j=>({
+   ...j,
+   matched:Array.isArray(j.matched)?j.matched:(j.matchedSkills||[]),
+   real:true
+ }));
+ return {jobs,sources:data?.sources||[],aiUsed:!!data?.aiUsed,privacyMode:data?.privacyMode||"stateless"};
+}
+function renderBackendSources(sources,aiUsed=false){
+ const el=document.getElementById("sourceState");
+ if(!el)return;
+ const pills=(sources||[]).map(x=>`<span class="chip">${esc(x.name)} ${Number(x.count)||0}</span>`).join("");
+ el.innerHTML=(pills||'<span class="chip">Backend พร้อมใช้งาน</span>')+(aiUsed?'<span class="chip">AI Ranking</span>':'<span class="chip">Smart Matching</span>');
+}
 async function loadJobs(){
  if(jobsCache.length)return jobsCache;
  setStatus("loading","กำลังโหลดตำแหน่งงานจากแหล่งข้อมูล...");
@@ -342,7 +368,7 @@ function renderSources(states){
  const el=document.getElementById("sourceState");
  const useful=states.filter(x=>x[1]>0);
  const thaiReady=useful.some(([n])=>/thai|jooble/i.test(n));
- el.innerHTML=(useful.length?useful.map(([n,c])=>`<span class="chip">${esc(n)} ${c}</span>`).join(""):`<span class="chip">ยังไม่มีแหล่งงานตอบกลับ</span>`) + (thaiReady?"":`<span class="chip">งานไทย: รอเชื่อม API</span>`);
+ el.innerHTML=(useful.length?useful.map(([n,c])=>`<span class="chip">${esc(n)} ${c}</span>`).join(""):`<span class="chip">ยังไม่มีแหล่งงานตอบกลับ</span>`) + (thaiReady?"":`<span class="chip">งานไทย: เชื่อมผ่าน Backend</span>`);
 }
 function setStatus(mode,text){
  const b=document.getElementById("statusbar"),d=document.getElementById("statusDot"),t=document.getElementById("statusText");
@@ -391,27 +417,54 @@ function openLatestJob(i){
 }
 async function loadLatestJobs(){
  try{
-   const jobs=await loadJobs();
-   renderLatestJobs(jobs);
+   const generic={skills:["งาน"],experience:0,education:"",location:"ประเทศไทย",salary:0,workType:"",interest:"งาน",goal:""};
+   const result=await fetchBackendMatch(generic);
+   const thai=(result.jobs||[]).filter(isThaiJob);
+   const display=thai.length?thai:(result.jobs||[]);
+   renderLatestJobs(display);
+   renderBackendSources(result.sources,result.aiUsed);
  }catch(e){
-   const grid=document.getElementById("latestJobsGrid");
-   if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานล่าสุดไม่สำเร็จ</strong>ลองรีเฟรชหน้าอีกครั้ง หรือลองใหม่ภายหลัง";}
+   console.warn("Latest backend fallback",e);
+   try{
+     const jobs=await loadJobs();
+     renderLatestJobs(jobs);
+   }catch(err){
+     const grid=document.getElementById("latestJobsGrid");
+     if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานล่าสุดไม่สำเร็จ</strong>ลองรีเฟรชหน้าอีกครั้ง หรือลองใหม่ภายหลัง";}
+   }
  }
 }
+
 
 async function runMatch(){
  const p=getProfile();lastProfile=p;
  if(!p.skills.length&&!p.interest&&!p.goal){toast("กรอกทักษะหรืองานที่สนใจก่อนครับ");document.getElementById("skillInput").focus();return}
  updateProfile(p);
- const jobs=await loadJobs();
- const thaiOnly=wantsThailand(p)&&p.workType!=="remote";
- window.__thaiOnlyMode=thaiOnly;
- let candidates=thaiOnly?jobs.filter(isThaiJob):jobs;
- let ranked=candidates.map(j=>scoreJob(j,p)).filter(j=>j.score>=24).sort((a,b)=>b.score-a.score);
- if(CONFIG.aiEndpoint){try{ranked=await aiRerank(p,ranked.slice(0,35))}catch(e){console.warn("AI fallback",e)}}
- ranked=ranked.slice(0,24);
+ setStatus("loading","กำลังค้นหางานไทยจริงและจับคู่กับทักษะของคุณ...");
+ let ranked=[];
+ let backendOk=false;
+ try{
+   const result=await fetchBackendMatch(p);
+   ranked=(result.jobs||[]).slice(0,24);
+   renderBackendSources(result.sources,result.aiUsed);
+   backendOk=true;
+   setStatus("ok",ranked.length?`ดึงงานจริงและจัดอันดับให้แล้ว ${ranked.length} ตำแหน่ง`:"ยังไม่พบตำแหน่งที่ตรงกับเงื่อนไข");
+ }catch(e){
+   console.warn("Backend fallback",e);
+   const jobs=await loadJobs();
+   const thaiOnly=wantsThailand(p)&&p.workType!=="remote";
+   window.__thaiOnlyMode=thaiOnly;
+   let candidates=thaiOnly?jobs.filter(isThaiJob):jobs;
+   ranked=candidates.map(j=>scoreJob(j,p)).filter(j=>j.score>=24).sort((a,b)=>b.score-a.score).slice(0,24);
+   setStatus("ok","Backend ไม่ตอบกลับ จึงใช้แหล่งงานสำรองชั่วคราว");
+ }
+ window.__thaiOnlyMode=wantsThailand(p)&&p.workType!=="remote";
  renderJobs(ranked,p);
  buildInsight(ranked,p);
+ if(backendOk){
+   const info=document.getElementById("resultCount");
+   if(info&&ranked.length) info.textContent=`พบ ${ranked.length} ตำแหน่งจาก Job API ที่นำมาจัดอันดับให้คุณ`;
+ }
  document.getElementById("results").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -446,7 +499,7 @@ function renderJobs(jobs,p){
  }
  grid.className="jobs";
  grid.innerHTML=jobs.map((j,i)=>{
-  const reason=j.matched.length?`พบคำที่เกี่ยวข้องกับ ${j.matched.slice(0,4).join(", ")}`:"คะแนนมาจากความใกล้เคียงของชื่องาน เงื่อนไข และความสนใจ";
+  const reason=j.reason||((j.matched||[]).length?`พบคำที่เกี่ยวข้องกับ ${(j.matched||[]).slice(0,4).join(", ")}`:"คะแนนมาจากความใกล้เคียงของชื่องาน เงื่อนไข และความสนใจ");
   return `<article class="job">
    <div class="job-top"><div class="logo">${esc((j.company||j.title||"?").trim().slice(0,2).toUpperCase())}</div><div style="min-width:0"><h3>${esc(j.title)}</h3><div class="company">${esc(j.company||"ไม่ระบุบริษัท")}</div></div><span class="score">${j.score}%</span></div>
    <div class="meta"><span>📍 ${esc(j.location||"ไม่ระบุ")}</span><span>💼 ${esc(j.type|| (j.remote?"Remote":"ไม่ระบุ"))}</span>${j.salary?`<span>💰 ${esc(j.salary)}</span>`:""}</div>
