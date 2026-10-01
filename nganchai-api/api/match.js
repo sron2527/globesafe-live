@@ -20,6 +20,15 @@ async function json(url,opt={},ms=9000){
 function q(p){return clean([...p.skills.slice(0,8),p.interest,p.goal,p.education].filter(Boolean).join(", "),220)}
 function salary(v=""){const a=String(v).replace(/,/g,"").match(/\d{4,7}/g)?.map(Number)||[];return a.length?Math.max(...a):0}
 function dedupe(a){const s=new Set();return a.filter(j=>{const k=norm(j.title+"|"+j.company+"|"+j.location);if(!k||s.has(k))return false;s.add(k);return true})}
+function wantsThailand(p){
+  const l=norm(p.location||"");
+  if(!l)return false;
+  return /ประเทศไทย|thailand|กรุงเทพ|bangkok|เชียงใหม่|chiang mai|ภูเก็ต|phuket|ชลบุรี|chon buri|ระยอง|rayong|พัทยา|pattaya|นนทบุรี|nonthaburi|ปทุม|pathum|สมุทร|samut|อยุธยา|ayutthaya|โคราช|korat|nakhon ratchasima|ขอนแก่น|khon kaen|อุดร|udon|อุบล|ubon|สงขลา|songkhla|หาดใหญ่|hat yai|สุราษฎร์|surat|ลำปาง|lampang|ลำพูน|lamphun|เชียงราย|chiang rai|พิษณุโลก|phitsanulok/.test(l);
+}
+function isThaiJob(j){
+  const h=norm((j.location||"")+" "+(j.source||""));
+  return /ประเทศไทย|thailand|กรุงเทพ|bangkok|เชียงใหม่|chiang mai|ภูเก็ต|phuket|ชลบุรี|chon buri|ระยอง|rayong|พัทยา|pattaya|นนทบุรี|nonthaburi|ปทุม|pathum|สมุทร|samut|อยุธยา|ayutthaya|โคราช|korat|nakhon ratchasima|ขอนแก่น|khon kaen|อุดร|udon|อุบล|ubon|สงขลา|songkhla|หาดใหญ่|hat yai|สุราษฎร์|surat|ลำปาง|lampang|ลำพูน|lamphun|เชียงราย|chiang rai|พิษณุโลก|phitsanulok|jooble/.test(h);
+}
 function mapJooble(d){return (d?.jobs||[]).map(j=>({id:"jooble-"+clean(j.id,80),title:clean(j.title,180),company:clean(j.company,160),location:clean(j.location,160),remote:/remote|รีโมต|work from home/i.test((j.title||"")+" "+(j.location||"")+" "+(j.snippet||"")),type:clean(j.type,80),salary:clean(j.salary,120),description:clean(strip(j.snippet),2200),tags:[],url:String(j.link||""),source:clean(j.source||"Jooble",80)}))}
 function mapRemotive(d){return (d?.jobs||[]).map(j=>({id:"rem-"+j.id,title:clean(j.title,180),company:clean(j.company_name,160),location:clean(j.candidate_required_location||"Remote",160),remote:true,type:clean(j.job_type||"remote",80),salary:clean(j.salary,120),description:clean(strip(j.description),2200),tags:[j.category,...(j.tags||[])].map(x=>clean(x,60)).filter(Boolean).slice(0,12),url:String(j.url||""),source:"Remotive"}))}
 function mapArbeit(d){return (d?.data||[]).map(j=>({id:"arb-"+clean(j.slug,120),title:clean(j.title,180),company:clean(j.company_name,160),location:clean(j.location,160),remote:Boolean(j.remote),type:(j.job_types||[]).map(x=>clean(x,60)).join(", "),salary:"",description:clean(strip(j.description),2200),tags:[...(j.tags||[]),...(j.job_types||[])].map(x=>clean(x,60)).filter(Boolean).slice(0,12),url:String(j.url||""),source:"Arbeitnow"}))}
@@ -62,8 +71,12 @@ export default async function handler(req,res){
   res.setHeader("Cache-Control","no-store");
   try{
     const p=profileOf(req.body||{});if(!p.skills.length&&!p.interest&&!p.goal)return res.status(400).json({error:"กรุณาระบุทักษะ งานที่สนใจ หรือสิ่งที่อยากทำ"});
+    const thaiMode=wantsThailand(p) && p.workType!=="remote";
     const rr=await Promise.allSettled([jooble(p),remotive(p),arbeit()]),names=["Jooble Thailand","Remotive","Arbeitnow"],all=[],sources=[];
-    rr.forEach((r,i)=>{if(r.status==="fulfilled"&&r.value.length){all.push(...r.value);sources.push({name:names[i],count:r.value.length})}});
+    rr.forEach((r,i)=>{if(r.status==="fulfilled"&&r.value.length){
+      const vals=thaiMode ? r.value.filter(isThaiJob) : r.value;
+      if(vals.length){all.push(...vals);sources.push({name:names[i],count:vals.length})}
+    }});
     let ranked=dedupe(all).map(j=>score(j,p)).sort((a,b)=>b.score-a.score).slice(0,35),aiUsed=false;
     try{const a=await aiRank(p,ranked);if(a){ranked=a;aiUsed=true}}catch{}
     return res.status(200).json({ok:true,privacyMode:"stateless",aiUsed,sources,count:ranked.length,jobs:ranked.slice(0,24)});
