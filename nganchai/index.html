@@ -379,12 +379,10 @@ function renderLatestJobs(jobs){
  const grid=document.getElementById("latestJobsGrid");
  if(!grid)return;
  const thai=jobs.filter(isThaiJob);
- const remote=jobs.filter(j=>j.remote&&!isThaiJob(j));
- const other=jobs.filter(j=>!j.remote&&!isThaiJob(j));
- const display=[...thai,...remote,...other].slice(0,8);
+ const display=thai.slice(0,8);
  if(!display.length){
    grid.className="empty";
-   grid.innerHTML="<strong>กำลังรอแหล่งงานตอบกลับ</strong>เมื่อเชื่อม Job API ประเทศไทยแล้ว งานไทยล่าสุดจะมาแสดงตรงนี้อัตโนมัติ";
+   grid.innerHTML="<strong>ยังไม่พบงานไทยจาก Job API ในรอบนี้</strong>ระบบจะไม่เอางานต่างประเทศมาแสดงปะปน กรุณาลองรีเฟรชหรือลองค้นหาด้วยทักษะ/จังหวัด";
    return;
  }
  grid.className="latest-grid";
@@ -424,14 +422,9 @@ async function loadLatestJobs(){
    renderLatestJobs(display);
    renderBackendSources(result.sources,result.aiUsed);
  }catch(e){
-   console.warn("Latest backend fallback",e);
-   try{
-     const jobs=await loadJobs();
-     renderLatestJobs(jobs);
-   }catch(err){
-     const grid=document.getElementById("latestJobsGrid");
-     if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานล่าสุดไม่สำเร็จ</strong>ลองรีเฟรชหน้าอีกครั้ง หรือลองใหม่ภายหลัง";}
-   }
+   console.warn("Latest backend error",e);
+   const grid=document.getElementById("latestJobsGrid");
+   if(grid){grid.className="empty";grid.innerHTML="<strong>โหลดงานไทยล่าสุดไม่สำเร็จ</strong>ระบบไม่แสดงงานต่างประเทศแทน กรุณาลองใหม่อีกครั้งภายหลัง";}
  }
 }
 
