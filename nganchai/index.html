@@ -115,7 +115,7 @@ dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);paddi
  <section class="container latest-section" id="latestJobs">
   <div class="latest-shell">
    <div class="latest-title">
-    <div><h2>งานล่าสุดที่เปิดรับ</h2><p>ดูตำแหน่งงานจริงจากแหล่งที่เชื่อมต่อได้ทันที โดยยังไม่ต้องกรอกข้อมูล</p></div>
+    <div><h2>งานล่าสุดที่เปิดรับ</h2><p>รวมงานไทยหลายหมวดจากแหล่งงานจริง ดูได้ทันทีโดยยังไม่ต้องกรอกข้อมูล</p></div>
     <span class="latest-badge">อัปเดตจากแหล่งงานจริง</span>
    </div>
    <div id="latestJobsGrid" class="latest-loading">
@@ -415,7 +415,7 @@ function openLatestJob(i){
 }
 async function loadLatestJobs(){
  try{
-   const generic={skills:["งาน"],experience:0,education:"",location:"ประเทศไทย",salary:0,workType:"",interest:"งาน",goal:""};
+   const generic={latest:true,skills:[],experience:0,education:"",location:"ประเทศไทย",salary:0,workType:"",interest:"",goal:""};
    const result=await fetchBackendMatch(generic);
    const thai=(result.jobs||[]).filter(isThaiJob);
    const display=thai.length?thai:(result.jobs||[]);
